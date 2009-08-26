@@ -1,0 +1,138 @@
+pdp (1:0.12.4-5) unstable; urgency=low
+
+  * QA upload.
+    + Set maintainer to Debian QA Group <packages@qa.debian.org>.
+  * Acknowledge NMUs. (Closes: #394103).
+  * 05_kfreebsd.patch - Build on GNU/kFreeBSD. (Closes: #416258).
+    + Thanks to Cyril Brulebois.
+  * Replace libglut3-dev with freeglut3-dev. (Closes: #543700, #394499).
+  * Bump debhelper build-dep and compat to 5.
+  * Bump Standards Version to 3.8.3.
+    + Menu policy transition.
+
+ -- Barry deFreese <bdefreese@debian.org>  Wed, 26 Aug 2009 14:17:10 -0400
+
+pdp (1:0.12.4-4.4) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * 04_quicktime_fix.patch: new, fixes FTBFS (Closes: #392179)
+      + change path to QuickTime includes from "quicktime/" to "lqt/" in
+        modules/image_io/pdp_qt.c.
+      + thanks Andreas Jochens for his patch.
+
+ -- Mohammed Adnène Trojette <adn+deb@diwi.org>  Thu, 19 Oct 2006 16:13:55 +0200
+
+pdp (1:0.12.4-4.3) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Compile with -Wno-error to avoid FTBFS with gcc-4.1 (Closes: #356169).
+    + some bits where left (opengl stuff) because it uses Makefile.config to
+      define CFLAGS. add 03_force_Wno-error.patch to change them.
+
+ -- Pierre Habouzit <madcoder@debian.org>  Sun, 11 Jun 2006 01:18:03 +0200
+
+pdp (1:0.12.4-4.2) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Compile with -Wno-error to avoid FTBFS with gcc-4.1 (Closes: #356169).
+  * Bump Standards-Version to 3.7.2 (No changes required).
+  * Fix debian/menu.
+
+ -- Pierre Habouzit <madcoder@debian.org>  Sat, 10 Jun 2006 13:18:11 +0200
+
+pdp (1:0.12.4-4.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Remove Build-Dependency on xlibs-dev (Closes: #347034).
+  * Credit and Big Thanks to Justin Pryzby <justinpryzby@users.sourceforge.net>
+    for the patch and testing.
+
+ -- Amaya Rodrigo Sastre <amaya@debian.org>  Sat, 21 Jan 2006 20:41:30 +0100
+
+pdp (1:0.12.4-4) unstable; urgency=low
+
+  * Recompilation because of libquicktime name change (Closes: #334495)
+
+ -- Guenter Geiger (Debian/GNU) <geiger@debian.org>  Wed, 19 Oct 2005 10:47:29 +0200
+
+pdp (1:0.12.4-3) unstable; urgency=low
+
+  * Updated description
+  * added menu entry and icon
+  * Fixed gcc4.0 problems (closes: #2879079)
+
+ -- Guenter Geiger (Debian/GNU) <geiger@debian.org>  Tue, 16 Aug 2005 13:06:03 +0200
+
+pdp (1:0.12.4-2) unstable; urgency=low
+
+  * fixed the hardcoded depends
+  * added 3dp library
+
+ -- Guenter Geiger (Debian/GNU) <geiger@debian.org>  Tue, 15 Mar 2005 22:21:05 +0100
+
+pdp (1:0.12.4-1) unstable; urgency=low
+
+  * New upstream version
+  * Moved to cdbs
+  * enabled mmx for i368 platforms
+
+ -- Guenter Geiger (Debian/GNU) <geiger@debian.org>  Wed,  2 Mar 2005 23:08:06 +0100
+
+pdp (1:0.12.3-2) unstable; urgency=low
+
+  * Added build dependecy on libxv-dev
+
+ -- Guenter Geiger (Debian/GNU) <geiger@debian.org>  Mon,  4 Oct 2004 18:47:12 +0200
+
+pdp (1:0.12.3-1) unstable; urgency=low
+
+  * New Upstream Version
+  * Added -fPIC to CFLAGS
+  * Removed example files in debian dir
+  * readded installation of doc files
+  * added puredata build dependency
+  * added libgls build dependency
+
+ -- Guenter Geiger (Debian/GNU) <geiger@debian.org>  Fri, 25 Jun 2004 16:36:18 +0200
+
+pdp (1:0.12.2-5) unstable; urgency=low
+
+  * Changing package name
+
+ -- Pablo Martn <caedes@sindominio.net>  Wed, 13 Aug 2003 12:00:25 +0200
+
+pdp (0.12.2-4) unstable; urgency=low
+
+  * Fixing some errors in the package
+
+ -- Pablo Martn <caedes@sindominio.net>  Thu, 31 Jul 2003 14:50:40 +0200
+
+pdp (0.12.2-3) unstable; urgency=low
+
+  * Recompile to keep up with debian
+
+ -- Pablo Martn <caedes@sindominio.net>  Wed, 23 Jul 2003 20:20:08 +0200
+
+pdp (0.12.2-2) unstable; urgency=low
+
+  * Trying to get dependencies better
+
+ -- Pablo Martn <caedes@sindominio.net>  Wed, 23 Jul 2003 11:20:36 +0200
+
+pdp (0.12.2-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Pablo Martn <caedes@sindominio.net>  Tue, 22 Jul 2003 10:22:23 +0200
+
+pdp (0.12.1-2) unstable; urgency=low
+
+  * New release to fix proxy hell.
+
+ -- Pablo Martn <caedes@sindominio.net>  Wed, 16 Jul 2003 02:27:23 +0200
+
+pdp (0.12.1-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Pablo Martn <caedes@sindominio.net>  Thu, 10 Jul 2003 02:27:23 +0200

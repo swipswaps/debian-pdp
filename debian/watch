@@ -1,0 +1,3 @@
+version=3
+
+http://zwizwa.be/pd/pdp/pdp-([\d.]+)\.tar\.gz

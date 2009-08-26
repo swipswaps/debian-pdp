@@ -1,0 +1,12 @@
+diff -Nur pdp-0.12.4/build-tree/pdp-0.12.4/opengl/Makefile.config pdp-0.12.4.new/build-tree/pdp-0.12.4/opengl/Makefile.config
+--- pdp-0.12.4/opengl/Makefile.config	2006-06-11 01:21:36.000000000 +0200
++++ pdp-0.12.4.new/opengl/Makefile.config	2006-06-11 01:21:53.000000000 +0200
+@@ -6,7 +6,7 @@
+ 
+ CFLAGS = -fPIC -DPD -O2 -funroll-loops -fomit-frame-pointer  -ffast-math \
+     -Wall -W -Wstrict-prototypes -Werror \
+-    -Wno-unused -Wno-parentheses -Wno-switch -g
++    -Wno-unused -Wno-parentheses -Wno-switch -g -Wno-error
+ 
+ CPPFLAGS = -I$(PD_DIR) -I$(PDP_DIR) -I$(PDP_OGL_DIR) -I/usr/X11R6/include
+ LDFLAGS =  -lGL -lglut

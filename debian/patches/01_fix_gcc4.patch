@@ -1,0 +1,12 @@
+diff -ruN pdp-0.12.4-old/system/type/pdp_bitmap.c pdp-0.12.4/system/type/pdp_bitmap.c
+--- pdp-0.12.4-old/system/type/pdp_bitmap.c	2003-09-15 19:48:56.000000000 +0200
++++ pdp-0.12.4/system/type/pdp_bitmap.c	2005-08-16 14:54:11.000000000 +0200
+@@ -475,7 +475,7 @@
+     int nb_channels = image->depth;
+     int new_p, i;
+ 
+-    static inline u8 _map(s32 pixel){
++    inline u8 _map(s32 pixel){
+ 	s32 mask = ~(pixel>>16);
+ 	return ((pixel >> 7) & mask);
+     }
