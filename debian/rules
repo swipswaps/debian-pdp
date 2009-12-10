@@ -16,6 +16,7 @@ override_dh_auto_configure:
 
 override_dh_auto_clean:
 	dh clean --before dh_auto_clean
+	[ ! -f Makefile.config ] || make clean
 	-$(RM) -rf bin/pdp-config config.log config.status include/pdp_config.h
 	-$(RM) -f Makefile.config
 	dh clean --after dh_auto_clean
