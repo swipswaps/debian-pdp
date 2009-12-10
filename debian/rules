@@ -13,10 +13,17 @@ endif
 
 override_dh_auto_configure:
 	dh_auto_configure -- $(DEB_CONFIGURE_EXTRA_FLAGS)
+	cd scaf && CFLAGS="$(CFLAGS)" ./configure --prefix=/usr
+
+override_dh_auto_build:
+	make everythin
 
 override_dh_auto_clean:
 	dh clean --before dh_auto_clean
+	[ ! -f opengl/Makefile.config ] || make -C opengl clean
+	[ ! -f scaf/Makefile.config ] || make -C scaf clean
+	-$(RM) -f scaf/Makefile.config scaf/config.log scaf/config.status
 	[ ! -f Makefile.config ] || make clean
-	-$(RM) -rf bin/pdp-config config.log config.status include/pdp_config.h
-	-$(RM) -f Makefile.config
+	-$(RM) -rf bin/pdp-config include/pdp_config.h
+	-$(RM) -f Makefile.config config.log config.status
 	dh clean --after dh_auto_clean
