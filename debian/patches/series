@@ -1,4 +1,3 @@
 00_add3dp.patch
 03_force_Wno-error.patch
-04_quicktime_fix.patch
 05_kfreebsd.patch
