@@ -2,3 +2,4 @@
 01_destdir.patch
 03_force_Wno-error.patch
 05_kfreebsd.patch
+06_add_v4l2.patch
