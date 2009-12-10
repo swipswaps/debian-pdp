@@ -1,5 +1,4 @@
 00_add3dp.patch
-01_fix_gcc4.patch
 02_assembler_fix.patch
 03_force_Wno-error.patch
 04_quicktime_fix.patch

@@ -5,8 +5,9 @@ pdp (1:0.12.5-1) unstable; urgency=low
   * debian/rules: switch to debhelper and quilt
   * debian/control: add Build-Depends on quilt
   * debian/patches/00_add3dp.patch: partly merged upstream
+  * debian/patches/01_fix_gcc4.patch: merged upstream
 
- -- Paul Brossier <piem@debian.org>  Thu, 10 Dec 2009 05:45:23 +0100
+ -- Paul Brossier <piem@debian.org>  Thu, 10 Dec 2009 05:47:09 +0100
 
 pdp (1:0.12.4-5) unstable; urgency=low
 
