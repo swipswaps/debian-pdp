@@ -873,3 +873,29 @@ index 0d03854..3fdf795 100644
  #endif
  
  #ifdef HAVE_PDP_GLX
+diff --git a/configure b/configure
+index 605776d..44eeacf 100755
+--- a/configure
++++ b/configure
+@@ -3770,7 +3770,7 @@ echo "${ECHO_T}$ac_cv_header_linux_videodev_h" >&6; }
+ 
+ fi
+ if test $ac_cv_header_linux_videodev_h = yes; then
+-  PDP_OPTMOD="$PDP_OPTMOD pdp_v4l.o"
++  PDP_OPTMOD="$PDP_OPTMOD pdp_v4l.o pdp_v4l2.o"
+ 
+ cat >>confdefs.h <<\_ACEOF
+ #define HAVE_PDP_V4L 1
+diff --git a/configure.ac b/configure.ac
+index 9a8de6e..325bb21 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -134,7 +134,7 @@ then
+ dnl if not darwin, assume target is linux
+ else
+ 	AC_CHECK_HEADER(linux/videodev.h,
+-		PDP_OPTMOD="$PDP_OPTMOD pdp_v4l.o"
++		PDP_OPTMOD="$PDP_OPTMOD pdp_v4l.o pdp_v4l2.o"
+ 		AC_DEFINE(HAVE_PDP_V4L, 1, build pdp_v4l),
+ 		echo "   linux/videodev.h not found: not building pdp_v4l")
+ 
