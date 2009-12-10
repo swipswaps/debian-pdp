@@ -14,8 +14,9 @@ pdp (1:0.12.5-1) unstable; urgency=low
   * debian/dirs: do not ship empty externs
   * debian/patches/06_add_v4l2.patch: add v4l2 from PiDiP
   * debian/control: add quilt, drop cdbs
+  * debian/pdp-config.sgml: converted to docbook format
 
- -- Paul Brossier <piem@debian.org>  Thu, 10 Dec 2009 09:32:23 +0100
+ -- Paul Brossier <piem@debian.org>  Thu, 10 Dec 2009 10:20:53 +0100
 
 pdp (1:0.12.4-5) unstable; urgency=low
 

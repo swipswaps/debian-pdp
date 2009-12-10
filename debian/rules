@@ -18,6 +18,7 @@ override_dh_auto_build:
 	dh build --before dh_auto_build
 	make pdp_all
 	make -C opengl
+	docbook-to-man debian/pdp-config.sgml > pdp-config.1
 	dh build --after dh_auto_build
 
 override_dh_auto_clean:

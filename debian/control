@@ -4,6 +4,7 @@ Priority: extra
 Maintainer: Paul Brossier <piem@debian.org>
 Build-Depends: debhelper (>> 7.0.50~),
                quilt,
+               docbook-to-man,
                puredata (>= 0.38),
                libquicktime-dev,
                libsdl1.2-dev,
