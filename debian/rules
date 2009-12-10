@@ -16,7 +16,7 @@ override_dh_auto_configure:
 	cd scaf && CFLAGS="$(CFLAGS)" ./configure --prefix=/usr
 
 override_dh_auto_build:
-	make everythin
+	make everything
 
 override_dh_auto_clean:
 	dh clean --before dh_auto_clean
