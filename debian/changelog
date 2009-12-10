@@ -13,8 +13,9 @@ pdp (1:0.12.5-1) unstable; urgency=low
   * debian/README.source: add note about quilt
   * debian/dirs: do not ship empty externs
   * debian/patches/06_add_v4l2.patch: add v4l2 from PiDiP
+  * debian/control: add quilt, drop cdbs
 
- -- Paul Brossier <piem@debian.org>  Thu, 10 Dec 2009 09:19:26 +0100
+ -- Paul Brossier <piem@debian.org>  Thu, 10 Dec 2009 09:32:23 +0100
 
 pdp (1:0.12.4-5) unstable; urgency=low
 
