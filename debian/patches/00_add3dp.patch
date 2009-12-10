@@ -1,37 +1,16 @@
-diff -ruN pdp-0.12.4-old/Makefile pdp-0.12.4/Makefile
---- pdp-0.12.4-old/Makefile	2004-06-15 13:00:24.000000000 +0200
-+++ pdp-0.12.4/Makefile	2005-03-15 22:09:37.611259616 +0100
-@@ -7,6 +7,7 @@
- 	make -C system
- 	make -C puredata
- 	make -C modules
-+	make -C opengl
- 
- darwin:	pdp_all
- 	rm -f pdp.pd_darwin
-@@ -26,6 +27,7 @@
- 	make -C system clean
- 	make -C puredata clean
- 	make -C modules clean
-+	make -C opengl clean
- 
- clean: buildclean
- 	rm -f pdp.pd_linux
-diff -ruN pdp-0.12.4-old/opengl/Makefile.config pdp-0.12.4/opengl/Makefile.config
---- pdp-0.12.4-old/opengl/Makefile.config	2003-06-23 03:16:52.000000000 +0200
-+++ pdp-0.12.4/opengl/Makefile.config	2005-03-15 22:14:16.859807384 +0100
-@@ -1,10 +1,10 @@
--PD_DIR = /home/tom/pd/distro/pd/src
--PDP_DIR = /home/tom/pd/packet/include
--PDP_OGL_DIR = /home/tom/pd/packet/opengl/include
-+PD_DIR = /usr/include
-+PDP_DIR = ../../include
-+PDP_OGL_DIR = ../include
- 
+diff --git a/opengl/Makefile.config b/opengl/Makefile.config
+index dc5989b..532c4fa 100644
+--- a/opengl/Makefile.config
++++ b/opengl/Makefile.config
+@@ -6,9 +6,9 @@ PDP_DIR = ../../include
+ PDP_OGL_DIR = ../include
  
  
 -CFLAGS = -DPD -O2 -funroll-loops -fomit-frame-pointer  -ffast-math \
 +CFLAGS = -fPIC -DPD -O2 -funroll-loops -fomit-frame-pointer  -ffast-math \
      -Wall -W -Wstrict-prototypes -Werror \
-     -Wno-unused -Wno-parentheses -Wno-switch -g
+-    -Wno-unused -Wno-parentheses -Wno-switch -g -I../../../../pd/src
++    -Wno-unused -Wno-parentheses -Wno-switch -g
  
+ 
+ CPPFLAGS = -I$(PDP_DIR) -I$(PDP_OGL_DIR) -I/usr/X11R6/include -DPDP_VERSION=\"$(PDP_VERSION)\"
