@@ -2,4 +2,3 @@ opengl/*.pd_linux usr/lib/pd/extra
 opengl/abstractions/* usr/lib/pd/extra
 opengl/doc/examples/*.pd usr/lib/pd/doc/3dp/examples/
 opengl/doc/objects/*.pd usr/lib/pd/doc/3dp/objects/
-debian/pd-pdp.xpm usr/share/pixmaps/
