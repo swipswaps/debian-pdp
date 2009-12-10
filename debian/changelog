@@ -1,3 +1,12 @@
+pdp (1:0.12.5-1) unstable; urgency=low
+
+  * Adopt package (closes: #521506)
+  * New upstream release
+  * debian/rules: switch to debhelper and quilt
+  * debian/control: add Build-Depends on quilt
+
+ -- Paul Brossier <piem@debian.org>  Thu, 10 Dec 2009 05:29:48 +0100
+
 pdp (1:0.12.4-5) unstable; urgency=low
 
   * QA upload.

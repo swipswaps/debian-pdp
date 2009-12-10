@@ -1,9 +1,17 @@
 Source: pdp
 Section: graphics
 Priority: extra
-Maintainer: Debian QA Group <packages@qa.debian.org>
-Build-Depends: cdbs, debhelper (>> 5.0.0), puredata (>= 0.38), libquicktime-dev, libsdl1.2-dev, libpng12-dev, libgsl0-dev, libxv-dev, freeglut3-dev
-Standards-Version: 3.8.3
+Maintainer: Paul Brossier <piem@debian.org>
+Build-Depends: cdbs,
+               debhelper (>> 7.0.50~),
+               puredata (>= 0.38),
+               libquicktime-dev,
+               libsdl1.2-dev,
+               libpng12-dev,
+               libgsl0-dev,
+               libxv-dev,
+               freeglut3-dev
+Standards-Version: 3.8.3Debian QA Group <packages@qa.
 Homepage: http://zwizwa.be/pdp/
 
 Package: pd-pdp
