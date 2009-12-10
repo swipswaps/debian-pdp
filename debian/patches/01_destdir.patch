@@ -1,0 +1,39 @@
+diff --git a/Makefile b/Makefile
+index b60f283..79d80af 100644
+--- a/Makefile
++++ b/Makefile
+@@ -67,20 +67,20 @@ tagsclean:
+ 
+ install: all
+ 	#check if pd is installed. if this fails make install will stop here.
+-	test -d $(prefix)/lib/pd
+-	install -d $(prefix)/lib/pd/extra
+-	install -m 755 $(PDP_LIBRARY_NAME) $(prefix)/lib/pd/extra
+-	install -m 755 -d $(prefix)/include/pdp
+-	install -m 644 include/*.h $(prefix)/include/pdp
+-	install -m 644 abstractions/*.pd $(prefix)/lib/pd/extra
+-	install -m 644 doc/objects/*.pd $(prefix)/lib/pd/doc/5.reference
+-	install -m 755 -d $(prefix)/lib/pd/doc/pdp
+-	install -m 755 -d $(prefix)/lib/pd/doc/pdp/introduction
+-	install -m 755 -d $(prefix)/lib/pd/doc/pdp/examples
+-	install -m 644 doc/reference.txt $(prefix)/lib/pd/doc/pdp
+-	install -m 644 doc/introduction/*.pd $(prefix)/lib/pd/doc/pdp/introduction
+-	install -m 644 doc/examples/*.pd $(prefix)/lib/pd/doc/pdp/examples
+-	install -m 755 bin/pdp-config $(prefix)/bin
++	test -d $(DESTDIR)$(prefix)/lib/pd
++	install -d $(DESTDIR)$(prefix)/lib/pd/extra
++	install -m 755 $(PDP_LIBRARY_NAME) $(DESTDIR)$(prefix)/lib/pd/extra
++	install -m 755 -d $(DESTDIR)$(prefix)/include/pdp
++	install -m 644 include/*.h $(DESTDIR)$(prefix)/include/pdp
++	install -m 644 abstractions/*.pd $(DESTDIR)$(prefix)/lib/pd/extra
++	install -m 644 doc/objects/*.pd $(DESTDIR)$(prefix)/lib/pd/doc/5.reference
++	install -m 755 -d $(DESTDIR)$(prefix)/lib/pd/doc/pdp
++	install -m 755 -d $(DESTDIR)$(prefix)/lib/pd/doc/pdp/introduction
++	install -m 755 -d $(DESTDIR)$(prefix)/lib/pd/doc/pdp/examples
++	install -m 644 doc/reference.txt $(DESTDIR)$(prefix)/lib/pd/doc/pdp
++	install -m 644 doc/introduction/*.pd $(DESTDIR)$(prefix)/lib/pd/doc/pdp/introduction
++	install -m 644 doc/examples/*.pd $(DESTDIR)$(prefix)/lib/pd/doc/pdp/examples
++	install -m 755 bin/pdp-config $(DESTDIR)$(prefix)/bin
+ 
+ dist:
+ 	bin/snapshot `bin/release-version`

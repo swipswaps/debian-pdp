@@ -1,3 +1,4 @@
 00_add3dp.patch
+01_destdir.patch
 03_force_Wno-error.patch
 05_kfreebsd.patch
