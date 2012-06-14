@@ -11,6 +11,7 @@ Build-Depends: debhelper (>> 7.0.50~),
                libpng12-dev,
                libgsl0-dev,
                libxv-dev,
+               puredata-dev,
                freeglut3-dev
 Standards-Version: 3.8.3
 Homepage: http://zwizwa.be/pdp/

@@ -1,3 +1,12 @@
+pdp (1:0.12.5-1.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Rebuild against new libquicktime (Closes: #632241)
+  * Add missing build-dep puredata-dev (Closes: #627903)
+  * Patch the makefiles to use -rdynamic since -export_dynamic doesn't exist
+
+ -- Paul Wise <pabs@debian.org>  Sun, 28 Aug 2011 14:51:14 +0100
+
 pdp (1:0.12.5-1) unstable; urgency=low
 
   * Adopt package (closes: #521506)

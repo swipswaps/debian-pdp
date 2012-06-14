@@ -3,3 +3,4 @@
 03_force_Wno-error.patch
 05_kfreebsd.patch
 06_add_v4l2.patch
+fix_gcc_options.patch
