@@ -13,7 +13,7 @@ Build-Depends: debhelper (>> 7.0.50~),
                libxv-dev,
                puredata-dev,
                freeglut3-dev
-Standards-Version: 3.8.3
+Standards-Version: 3.9.2
 Homepage: http://zwizwa.be/pdp/
 
 Package: pd-pdp
