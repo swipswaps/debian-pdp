@@ -1,7 +1,6 @@
-diff -Nur -x '*.orig' -x '*~' pdp-0.12.4/build-tree/pdp-0.12.4/configure pdp-0.12.4.new/build-tree/pdp-0.12.4/configure
---- pdp-0.12.4/configure	2004-07-08 21:58:03.000000000 -0400
-+++ pdp-0.12.4/configure	2009-08-26 14:22:01.000000000 -0400
-@@ -3083,7 +3083,7 @@
+--- pdp.orig/configure
++++ pdp/configure
+@@ -3615,7 +3615,7 @@
  
  
  ARCH=`uname -s`
@@ -10,10 +9,9 @@ diff -Nur -x '*.orig' -x '*~' pdp-0.12.4/build-tree/pdp-0.12.4/configure pdp-0.1
  then
  	PDP_LIBRARY_NAME=pdp.pd_linux
  
-diff -Nur -x '*.orig' -x '*~' pdp-0.12.4/build-tree/pdp-0.12.4/configure.ac pdp-0.12.4.new/build-tree/pdp-0.12.4/configure.ac
---- pdp-0.12.4/configure.ac	2004-07-08 21:55:09.000000000 -0400
-+++ pdp-0.12.4/configure.ac	2009-08-26 14:22:32.000000000 -0400
-@@ -100,7 +100,7 @@
+--- pdp.orig/configure.ac
++++ pdp/configure.ac
+@@ -101,7 +101,7 @@
  AC_CHECK_LIB(m,sin)
  
  ARCH=`uname -s`

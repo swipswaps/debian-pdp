@@ -1,5 +1,5 @@
---- /dev/null	2009-12-07 20:28:05.516310862 +0100
-+++ b/modules/image_io/pdp_v4l2.c	2008-12-11 02:02:51.000000000 +0100
+--- /dev/null
++++ pdp/modules/image_io/pdp_v4l2.c
 @@ -0,0 +1,852 @@
 +/*
 + *   PiDiP module
@@ -853,11 +853,9 @@
 +#ifdef __cplusplus
 +}
 +#endif
-diff --git a/system/pdp.c b/system/pdp.c
-index 0d03854..3fdf795 100644
---- a/system/pdp.c
-+++ b/system/pdp.c
-@@ -56,6 +56,7 @@ void pdp_mix_setup(void);
+--- pdp.orig/system/pdp.c
++++ pdp/system/pdp.c
+@@ -56,6 +56,7 @@
  void pdp_randmix_setup(void);
  void pdp_qt_setup(void);
  void pdp_v4l_setup(void);
@@ -865,7 +863,7 @@ index 0d03854..3fdf795 100644
  void pdp_reg_setup(void);
  void pdp_conv_setup(void);
  void pdp_bq_setup(void);
-@@ -219,6 +220,7 @@ void pdp_setup(void){
+@@ -219,6 +220,7 @@
  
  #ifdef HAVE_PDP_V4L
      pdp_v4l_setup();
@@ -873,11 +871,9 @@ index 0d03854..3fdf795 100644
  #endif
  
  #ifdef HAVE_PDP_GLX
-diff --git a/configure b/configure
-index 605776d..44eeacf 100755
---- a/configure
-+++ b/configure
-@@ -3770,7 +3770,7 @@ echo "${ECHO_T}$ac_cv_header_linux_videodev_h" >&6; }
+--- pdp.orig/configure
++++ pdp/configure
+@@ -3770,7 +3770,7 @@
  
  fi
  if test $ac_cv_header_linux_videodev_h = yes; then
@@ -886,11 +882,9 @@ index 605776d..44eeacf 100755
  
  cat >>confdefs.h <<\_ACEOF
  #define HAVE_PDP_V4L 1
-diff --git a/configure.ac b/configure.ac
-index 9a8de6e..325bb21 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -134,7 +134,7 @@ then
+--- pdp.orig/configure.ac
++++ pdp/configure.ac
+@@ -134,7 +134,7 @@
  dnl if not darwin, assume target is linux
  else
  	AC_CHECK_HEADER(linux/videodev.h,

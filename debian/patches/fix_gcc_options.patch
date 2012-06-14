@@ -1,7 +1,7 @@
 Author: Paul Wise <pabs@debian.org>
 Description: Use -rdynamic instead of -export_dynamic since gcc does not understand it
---- a/Makefile
-+++ b/Makefile
+--- pdp.orig/Makefile
++++ pdp/Makefile
 @@ -26,11 +26,11 @@
  
  linux: pdp_all
@@ -16,8 +16,8 @@ Description: Use -rdynamic instead of -export_dynamic since gcc does not underst
  
  buildclean:
  	make -C include clean
---- a/opengl/Makefile
-+++ b/opengl/Makefile
+--- pdp.orig/opengl/Makefile
++++ pdp/opengl/Makefile
 @@ -20,7 +20,7 @@
  
  pdp_opengl.pd_linux: subdirs
@@ -27,8 +27,8 @@ Description: Use -rdynamic instead of -export_dynamic since gcc does not underst
  
  pdp_opengl.pd_darwin: subdirs
  	rm -f pdp_opengl.pd_linux
---- a/scaf/Makefile
-+++ b/scaf/Makefile
+--- pdp.orig/scaf/Makefile
++++ pdp/scaf/Makefile
 @@ -26,7 +26,7 @@
  
  pdp_scaf.pd_linux: pdp_scaf_all
@@ -38,8 +38,8 @@ Description: Use -rdynamic instead of -export_dynamic since gcc does not underst
  
  install: all
  	install -d $(prefix)/lib/scaf
---- a/scaf/compiler/scafc
-+++ b/scaf/compiler/scafc
+--- pdp.orig/scaf/compiler/scafc
++++ pdp/scaf/compiler/scafc
 @@ -38,7 +38,7 @@
  
  TMP_S=`tempfile -s .s`
