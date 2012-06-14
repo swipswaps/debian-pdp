@@ -1,0 +1,44 @@
+Author: IOhannes m zmölnig
+Description: Fixing spelling mistakes
+--- pdp.orig/include/pdp_packet.h
++++ pdp/include/pdp_packet.h
+@@ -135,7 +135,7 @@
+ 
+     union                          /* each packet type has a unique subheader */
+     {
+-	t_raw    raw;              /* raw subheader (for extensions unkown to pdp core system) */
++	t_raw    raw;              /* raw subheader (for extensions unknown to pdp core system) */
+ 	struct _image  image;      /* (nonstandard internal) 16 bit signed planar bitmap image format */
+ 	struct _bitmap bitmap;     /* (standard) bitmap image (fourcc coded) */
+ 	//t_ca     ca;             /* cellular automaton state data */
+--- pdp.orig/modules/image_io/pdp_qt.c
++++ pdp/modules/image_io/pdp_qt.c
+@@ -339,7 +339,7 @@
+ 	    break;
+ 
+ 	default:
+-	    post("%s: error on init: unkown colour model",x->x_name->s_name);
++	    post("%s: error on init: unknown colour model",x->x_name->s_name);
+ 	    break;
+ 	}
+     
+@@ -543,7 +543,7 @@
+ 	break;
+ 
+     default:
+-	post("%s: error on decode: unkown colour model",x->x_name->s_name);
++	post("%s: error on decode: unknown colour model",x->x_name->s_name);
+ 	break;
+     }
+ 
+--- pdp.orig/opengl/modules/pdp_3d_state.c
++++ pdp/opengl/modules/pdp_3d_state.c
+@@ -93,7 +93,7 @@
+     else if (s == gensym("blend_add"))  {x->x_setup = _blend_add; x->x_thing = GL_BLEND;}
+     else if (s == gensym("depth_test")) {x->x_setup = 0;          x->x_thing = GL_DEPTH_TEST;}
+ 
+-    /* unkown command: do nothing */
++    /* unknown command: do nothing */
+     else {
+ 	post ("3dp_state: unknown flag %s", s->s_name);
+ 	pd_free((void *)x);
