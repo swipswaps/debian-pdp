@@ -3,21 +3,22 @@ Section: graphics
 Priority: extra
 Maintainer: Paul Brossier <piem@debian.org>
 Build-Depends: debhelper (>> 7.0.50~),
-               docbook-to-man,
-               puredata (>= 0.38),
-               libquicktime-dev,
-               libsdl1.2-dev,
-               libpng12-dev,
-               libgsl0-dev,
-               libxv-dev,
-               puredata-dev,
-               freeglut3-dev
+ docbook-to-man,
+ puredata (>= 0.38),
+ libquicktime-dev,
+ libsdl1.2-dev,
+ libpng12-dev,
+ libgsl0-dev,
+ libxv-dev,
+ freeglut3-dev
 Standards-Version: 3.9.2
 Homepage: http://zwizwa.be/pdp/
 
 Package: pd-pdp
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, puredata
+Depends: ${shlibs:Depends},
+ ${misc:Depends},
+ puredata
 Description: Graphics system for Pd
  PDP is an extension library for Pd that allows you to manipulate movies 
  and live video data in realtime. PDP stands for Pd Packet, the data 
