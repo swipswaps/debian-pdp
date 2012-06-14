@@ -18,7 +18,7 @@ Package: pd-pdp
 Architecture: any
 Depends: ${shlibs:Depends},
  ${misc:Depends},
- puredata
+ puredata-core | pd
 Description: Graphics system for Pd
  PDP is an extension library for Pd that allows you to manipulate movies 
  and live video data in realtime. PDP stands for Pd Packet, the data 
