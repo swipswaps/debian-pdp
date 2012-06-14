@@ -1,8 +1,6 @@
 #!/usr/bin/make -f
 
-export PDP_EXTRA_CFLAGS = -fPIC -Wno-error
-export CXXFLAGS = -Wno-error
-export CFLAGS = -Wno-error
+export PDP_EXTRA_CFLAGS = -fPIC -Wno-error $(CPPFLAGS) $(CFLAGS)
 
 ifeq ($(DEB_BUILD_ARCH),i386)
 DEB_CONFIGURE_EXTRA_FLAGS = --enable-mmx
@@ -17,7 +15,7 @@ override_dh_auto_configure:
 override_dh_auto_build:
 	dh build --before dh_auto_build
 	make pdp_all
-	make -C opengl
+	make -C opengl LDFLAGS="$(LDFLAGS)"
 	docbook-to-man debian/pdp-config.sgml > pdp-config.1
 	dh build --after dh_auto_build
 
