@@ -1,3 +1,5 @@
+Author: Debian
+Description: provide [pdp_v4l2], since v4l1 has been removed from the kernel
 --- /dev/null
 +++ pdp/modules/image_io/pdp_v4l2.c
 @@ -0,0 +1,852 @@

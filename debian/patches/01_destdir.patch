@@ -1,3 +1,5 @@
+Author: Debian
+Description: prepend $(DESTDIR) to installation targets
 diff --git a/Makefile b/Makefile
 index b60f283..79d80af 100644
 --- a/Makefile

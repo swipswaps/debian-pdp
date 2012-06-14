@@ -1,3 +1,5 @@
+Author: Debian
+Description: treat kFreeBSD the same as linux
 --- pdp.orig/configure
 +++ pdp/configure
 @@ -3615,7 +3615,7 @@

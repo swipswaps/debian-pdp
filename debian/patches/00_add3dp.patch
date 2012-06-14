@@ -1,3 +1,5 @@
+Description: Makefile fixes to allow 3dp to be build
+Author: Debian
 diff --git a/opengl/Makefile.config b/opengl/Makefile.config
 index dc5989b..532c4fa 100644
 --- a/opengl/Makefile.config
