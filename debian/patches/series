@@ -5,3 +5,4 @@
 06_add_v4l2.patch
 fix_gcc_options.patch
 fix_typos.patch
+hardening.patch
