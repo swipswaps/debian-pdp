@@ -7,7 +7,7 @@ Build-Depends: debhelper (>> 7.0.50~),
  puredata (>= 0.38),
  libquicktime-dev,
  libsdl1.2-dev,
- libpng12-dev,
+ libpng-dev,
  libgsl0-dev,
  libxv-dev,
  freeglut3-dev
