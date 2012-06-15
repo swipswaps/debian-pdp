@@ -1,3 +1,25 @@
+pdp (1:0.12.5-2) unstable; urgency=low
+
+  * Switch to 3.0 (quilt) format
+  * Bumped standards-version to 3.9.3
+  * Enabled hardening builds
+    - Use debhelper compat >=9
+    - Added patch to fix build-errors
+  * debian/control
+    - Cosmetic fixes (indentation)
+    - Removed Build-dependency on quilt
+    - Build-Depend on debhelper>=9
+    - Build-Depend on libpng-dev rather than on libpng12-dev
+    - Build-Depend on puredata-dev|puredata
+    - Depend on puredata-core|pd (Closes: #652384)
+  * debian/patches
+    - Refreshed patches so they apply cleanly
+    - Added quilt patch descriptions
+    - New patch that fixes spelling mistakes
+  * Added myself to Uploaders
+
+ -- IOhannes m zmoelnig (gpg-key at iem) <zmoelnig@iem.at>  Fri, 15 Jun 2012 19:15:21 +0200
+
 pdp (1:0.12.5-1.1) unstable; urgency=low
 
   * Non-maintainer upload.
