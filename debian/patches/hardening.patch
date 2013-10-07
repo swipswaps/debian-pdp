@@ -22,3 +22,20 @@ Descriptions: allow pdp to be compiled with hardening flags
  
  linux_mmx: linux
  linux_gcc_mmx: linux
+--- pdp.orig/opengl/Makefile.config
++++ pdp/opengl/Makefile.config
+@@ -8,10 +8,12 @@
+ 
+ CFLAGS = -DPD -O2 -funroll-loops -fomit-frame-pointer  -ffast-math \
+     -Wall -W -Wstrict-prototypes \
+-    -Wno-unused -Wno-parentheses -Wno-switch -g -I../../../../pd/src
++    -Wno-unused -Wno-parentheses -Wno-switch -g -I../../../../pd/src \
++    $(ADDITIONAL_CFLAGS)
+ 
+ 
+-CPPFLAGS = -I$(PDP_DIR) -I$(PDP_OGL_DIR) -I/usr/X11R6/include -DPDP_VERSION=\"$(PDP_VERSION)\"
++CPPFLAGS = -I$(PDP_DIR) -I$(PDP_OGL_DIR) -I/usr/X11R6/include -DPDP_VERSION=\"$(PDP_VERSION)\" \
++    $(ADDITIONAL_CPPFLAGS)
+ # CPPFLAGS = -I$(PD_DIR) -I$(PDP_DIR) -I$(PDP_OGL_DIR) -I/usr/X11R6/include
+ 
+ UNAME := $(shell uname -s)
