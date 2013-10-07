@@ -18,7 +18,7 @@
  *
  */
 
-
+#if 0 // Does not compile
 
 #include "pdp.h"
 #include "pdp_dpd_base.h"
@@ -101,4 +101,6 @@ void pdp_dpd_test_setup(void)
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

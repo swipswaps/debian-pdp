@@ -28,6 +28,10 @@
 #include "pdp_llconv.h"
 
 
+#if PD_MAJOR_VERSION==0 && PD_MINOR_VERSION>=43
+#include "s_stuff.h" // need to get sys_libdir for libquicktime plugins
+#endif
+
 #define min(x,y) ((x<y)?(x):(y))
 
 
@@ -221,14 +225,14 @@ static void pdp_qt_open(t_pdp_qt *x, t_symbol *name)
 
     /* check if qt file */
     if(0 == quicktime_check_sig(name->s_name)){
-	post("%s: ERROR: not a quicktime file", x->x_name->s_name);
+        pd_error(x,"%s: %s not a quicktime file", x->x_name->s_name, name->s_name);
 	goto exit;
     }
 
     /* open */
     DEBUG_MSG(x->x_qt = quicktime_open(name->s_name, 1, 0);)
     if (!(x->x_qt)){
-	post("%s: ERROR: can't open file", x->x_name->s_name);
+        pd_error(x,"%s: can't open %s", x->x_name->s_name, name->s_name);
 	goto exit;
     }
 
@@ -263,7 +267,7 @@ static void pdp_qt_open(t_pdp_qt *x, t_symbol *name)
     /* check if video codec is supported */
     if (x->x_video_tracks){
 	if (!quicktime_supported_video(x->x_qt,0)) {
-	    post("%s: WARNING: unsupported video codec",x->x_name->s_name);
+	    post("%s: WARNING: unsupported video codec in %s",x->x_name->s_name);
 	    x->x_video_tracks = 0;
 	}
     }
@@ -271,7 +275,7 @@ static void pdp_qt_open(t_pdp_qt *x, t_symbol *name)
     /* check if audio codec is supported */
     if (x->x_audio_tracks){
 	if (!quicktime_supported_audio(x->x_qt,0)) {
-	    post("%s: WARNING: unsupported audio codec", x->x_name->s_name);
+	    pd_error(x,"%s: unsupported audio codec in %s", x->x_name->s_name, name->s_name);
 	    x->x_audio_tracks = 0;
 	}
     }
@@ -294,7 +298,7 @@ static void pdp_qt_open(t_pdp_qt *x, t_symbol *name)
 	    x->x_qt_cmodel = BC_RGB888;
 	}
 	else {
-	    post("%s: WARNING: can't find a usable colour model", x->x_name->s_name);
+	    post("%s: WARNING: can't find a usable colour model for %", x->x_name->s_name);
 	    x->x_video_tracks = 0;
 	}
 
@@ -304,7 +308,8 @@ static void pdp_qt_open(t_pdp_qt *x, t_symbol *name)
 
     /* no video == errors */
     if (!x->x_video_tracks) {
-        post("%s: ERROR: no usable video stream found.", x->x_name->s_name);
+        pd_error(x,"%s: no usable video stream found in %s", 
+                 x->x_name->s_name, name->s_name);
 	goto exit_close;
     }
 
@@ -967,6 +972,20 @@ void pdp_qt_setup(void)
     pdp_qt_setup_common(pdp_qt_tilde_class);
 
     class_addmethod(pdp_qt_tilde_class, (t_method)pdp_qt_dsp, gensym("dsp"), 0);
+
+#ifdef __APPLE__
+    /* this is necessary for pdp_qt to find the embedded libquicktime plugins */
+    char buf[FILENAME_MAX];
+    char realpath_buf[FILENAME_MAX];
+    strncpy(buf, sys_libdir->s_name, FILENAME_MAX - 20);
+    strcat(buf, "/../lib/libquicktime1");
+    if(realpath(buf, realpath_buf))
+    {
+        if(sys_verbose)
+            post("[pdp_qt]: setting LIBQUICKTIME_PLUGIN_DIR to:\n   %s", realpath_buf);
+        setenv("LIBQUICKTIME_PLUGIN_DIR", realpath_buf, 0); // 0 means don't overwrite existing value
+    }
+#endif
 }
 
 #ifdef __cplusplus

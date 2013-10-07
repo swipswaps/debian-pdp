@@ -18,14 +18,13 @@
  *
  */
 
-// pdp stuff
 #include "pdp.h"
 #include "pdp_base.h"
+#include "zl/xwindow.h"
+#include "zl/xv.h"
+#include "zl_pd/zl_pd.h"
 
-// some x window glue code
-#include "pdp_xwindow.h"
-#include "pdp_xvideo.h"
-
+#include <stdarg.h>
 
 #define PDP_XV_AUTOCREATE_RETRY 10
 
@@ -34,14 +33,13 @@ typedef struct pdp_xv_struct
 {
     t_object x_obj;
 
-    t_pdp_xdisplay *x_xdpy;
-    t_pdp_xwindow *x_xwin;
-    t_pdp_xvideo *x_xvid;
+    zl_xdisplay_p x_xdpy;
+    zl_xwindow_p x_xwin;
+    zl_xv_p x_xvid;
 
     t_outlet *x_outlet;
 
     int x_packet0;
-    int x_queue_id;
     t_symbol *x_display;
 
     //Display *x_dpy;
@@ -55,35 +53,26 @@ typedef struct pdp_xv_struct
 
 static void pdp_xv_cursor(t_pdp_xv *x, t_floatarg f)
 {
-    if (x->x_xwin) pdp_xwindow_cursor(x->x_xwin, f);
+    if (x->x_xwin) zl_xwindow_cursor(x->x_xwin, f);
 }
 
 /* delete all submodules */
 static void _pdp_xv_cleanup(t_pdp_xv *x)
 {
-    if (x->x_xwin) pdp_xwindow_free(x->x_xwin);
-    if (x->x_xvid) pdp_xvideo_free(x->x_xvid);
-    if (x->x_xdpy) pdp_xdisplay_free(x->x_xdpy);
+    if (x->x_xwin) zl_xwindow_free(x->x_xwin);
+    if (x->x_xvid) zl_xv_free(x->x_xvid);
+    if (x->x_xdpy) zl_xdisplay_free(x->x_xdpy);
     x->x_xwin = 0;
     x->x_xvid = 0;
     x->x_xdpy = 0;
     x->x_initialized = 0;
 }
 
-/* wait for thread to finish */
-static void _pdp_xv_waitforthread(t_pdp_xv *x)
-{
-    t_pdp_procqueue *q = pdp_queue_get_queue();
-    pdp_procqueue_finish(q, x->x_queue_id);   // wait for thread to finish
-    x->x_queue_id = -1;
-}
-
 // this destroys the window and all the x connections
 static void pdp_xv_destroy(t_pdp_xv* x)
 {
-    if (x->x_initialized){
+    if (x->x_initialized) {
 	
-	_pdp_xv_waitforthread(x);  // wait for thread
 	_pdp_xv_cleanup(x);        // delete all objects
 
 	pdp_packet_mark_unused(x->x_packet0); // delete packet
@@ -102,15 +91,15 @@ static void pdp_xv_create(t_pdp_xv* x)
 
     
     /* open a display */
-    if (!(x->x_xdpy = pdp_xdisplay_new(x->x_display->s_name))) goto exit;
+    if (!(x->x_xdpy = zl_xdisplay_new(x->x_display->s_name))) goto exit;
 
     /* open an xv port on the display */
-    x->x_xvid = pdp_xvideo_new();
-    if (!pdp_xvideo_open_on_display(x->x_xvid, x->x_xdpy)) goto exit;
+    x->x_xvid = zl_xv_new(FOURCC_YV12);
+    if (!zl_xv_open_on_display(x->x_xvid, x->x_xdpy, 0)) goto exit;
 
     /* create a window on the display */
-    x->x_xwin = pdp_xwindow_new();
-    if (!pdp_xwindow_create_on_display(x->x_xwin, x->x_xdpy)) goto exit;
+    x->x_xwin = zl_xwindow_new();
+    if (!zl_xwindow_config(x->x_xwin, x->x_xdpy)) goto exit;
 
     /* done */
     x->x_initialized = 1;
@@ -145,67 +134,81 @@ static int pdp_xv_try_autocreate(t_pdp_xv *x)
 
 static void pdp_xv_bang(t_pdp_xv *x);
 
-static void pdp_xv_bang_thread(t_pdp_xv *x)
+static void display_packet(zl_xv_p xvid, zl_xwindow_p xwin, int packet)
 {
-    pdp_xvideo_display_packet(x->x_xvid, x->x_xwin, x->x_packet0);
-}
+    t_pdp *header = pdp_packet_header(packet);
+    void *data = pdp_packet_data(packet);
+    t_bitmap * bm = pdp_packet_bitmap_info(packet);
+    unsigned int width, height, encoding, size, nbpixels;
 
+    /* some checks: only display when initialized and when pacet is bitmap YV12 */
+    if (!header) return;
+    if (!bm) return;
 
-static void pdp_xv_bang_callback(t_pdp_xv *x)
-{
+    width = bm->width;
+    height = bm->height;
+    encoding = bm->encoding;
+    size = (width * height + (((width>>1)*(height>>1))<<1));
+    nbpixels = width * height;
 
-    /* receive events + send to outputs */
-    t_pdp_list *eventlist = pdp_xwindow_get_eventlist(x->x_xwin);
-    t_pdp_atom *a;
-
-    for (a=eventlist->first; a; a=a->next){
-	//pdp_list_print(a->w.w_list);
-	outlet_pdp_list(x->x_outlet, a->w.w_list);
+    if (PDP_BITMAP != header->type) {
+        pdp_post("pdp_xv: not a bitmap");
+        return;
+    }
+    if (PDP_BITMAP_YV12 != encoding) {
+        pdp_post("pdp_xv: not a YV12 bitmap");
+        return;
     }
 
-    /* free list */
-    pdp_tree_free(eventlist);
+    void *xv_data = zl_xv_image_data(xvid, xwin, width, height);
+    if (xv_data) { // Always OK?
+        /* Copy the data to the XvImage buffer */
+        memcpy(xv_data, data, size);
 
-    /* release the packet if there is one */
-    pdp_packet_mark_unused(x->x_packet0);
-    x->x_packet0 = -1;
+        /* Send it to the adapter. */
+        zl_xv_image_display(xvid, xwin);
+    }
 
 }
 
-/* manually poll for events */
-static void pdp_xv_poll(t_pdp_xv *x)
-{
-    if (x->x_initialized)
-	pdp_xv_bang_callback(x);
+
+
+/* Poll for X11 events. */
+static void outlet_event(void *context, int nb_double_args, zl_tag tag, va_list args) {
+    t_pdp_xv *x = context;
+    outlet_zl_float_list(x->x_outlet, nb_double_args, tag, args);
+}
+static void pdp_xv_poll(t_pdp_xv *x) {
+    zl_xdisplay_route_events(x->x_xdpy);
+    zl_xwindow_for_parsed_events(x->x_xwin, outlet_event, x);
 }
 
 static void pdp_xv_bang(t_pdp_xv *x)
 {
-    t_pdp_procqueue *q = pdp_queue_get_queue();
-
     /* check if window is initialized */
     if (!(x->x_initialized)){
         if (!pdp_xv_try_autocreate(x)) return;
     }
 
     /* check if we can proceed */
-    if (-1 != x->x_queue_id) return;
     if (-1 == x->x_packet0) return;
 
-    /* if previous queued method returned
-       schedule a new one, else ignore */
-    if (-1 == x->x_queue_id) {
-	pdp_procqueue_add(q, x, pdp_xv_bang_thread, pdp_xv_bang_callback, &x->x_queue_id);
-    }
-    
+    display_packet(x->x_xvid, x->x_xwin, x->x_packet0);
+
+    /* Release packet */
+    pdp_packet_mark_unused(x->x_packet0);
+    x->x_packet0 = -1;
+
+    /* Get events. */
+    pdp_xv_poll(x);
 }
 
 static void pdp_xv_input_0(t_pdp_xv *x, t_symbol *s, t_floatarg f)
 {
-
-    if (s == gensym("register_ro")) pdp_packet_convert_ro_or_drop(&x->x_packet0, (int)f, pdp_gensym("bitmap/yv12/*"));
+    if (s == gensym("register_ro")) {
+        pdp_packet_convert_ro_or_drop(&x->x_packet0, (int)f, pdp_gensym("bitmap/yv12/*"));
+    }
     if (s == gensym("process")) pdp_xv_bang(x);
-
 }
 
 
@@ -218,7 +221,6 @@ static void pdp_xv_autocreate(t_pdp_xv *x, t_floatarg f)
 
 static void pdp_xv_display(t_pdp_xv *x, t_symbol *s)
 {
-    _pdp_xv_waitforthread(x);
     x->x_display = s;
 
     /* only create if already active */
@@ -230,41 +232,39 @@ static void pdp_xv_display(t_pdp_xv *x, t_symbol *s)
 
 static void pdp_xv_movecursor(t_pdp_xv *x, float cx, float cy)
 {
-    if (x->x_initialized){
-	cx *= x->x_xwin->winwidth;
-	cy *= x->x_xwin->winheight;
-	pdp_xwindow_warppointer(x->x_xwin, cx, cy);
+    if (x->x_initialized) {
+        zl_xwindow_warppointer_rel(x->x_xwin, cx, cy);
     }
 }
 
 static void pdp_xv_fullscreen(t_pdp_xv *x)
 {
     if (x->x_initialized)
-	pdp_xwindow_fullscreen(x->x_xwin);
+	zl_xwindow_fullscreen(x->x_xwin);
 }
 
 static void pdp_xv_resize(t_pdp_xv* x, t_floatarg width, t_floatarg height)
 {
     if (x->x_initialized)
-	pdp_xwindow_resize(x->x_xwin, width, height);
+	zl_xwindow_resize(x->x_xwin, width, height);
 }
 
 static void pdp_xv_move(t_pdp_xv* x, t_floatarg width, t_floatarg height)
 {
     if (x->x_initialized)
-	pdp_xwindow_move(x->x_xwin, width, height);
+	zl_xwindow_move(x->x_xwin, width, height);
 }
 
 static void pdp_xv_moveresize(t_pdp_xv* x, t_floatarg xoff, t_floatarg yoff, t_floatarg width, t_floatarg height)
 {
     if (x->x_initialized)
-	pdp_xwindow_moveresize(x->x_xwin, xoff, yoff, width, height);
+	zl_xwindow_moveresize(x->x_xwin, xoff, yoff, width, height);
 }
 
 static void pdp_xv_tile(t_pdp_xv* x, t_floatarg xtiles, t_floatarg ytiles, t_floatarg i, t_floatarg j)
 {
     if (x->x_initialized)
-	pdp_xwindow_tile(x->x_xwin, xtiles, ytiles, i, j);
+	zl_xwindow_tile(x->x_xwin, xtiles, ytiles, i, j);
 }
 
 static void pdp_xv_vga(t_pdp_xv *x)
@@ -289,7 +289,6 @@ void *pdp_xv_new(void)
     x->x_xvid = 0;
     x->x_xdpy = 0;
     x->x_packet0 = -1;
-    x->x_queue_id = -1;
     x->x_display = gensym(":0");
     x->x_xdpy = 0;
     pdp_xv_autocreate(x,1);
@@ -340,5 +339,7 @@ void pdp_xv_setup(void)
 #ifdef __cplusplus
 }
 #endif
+
+
 
 

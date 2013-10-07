@@ -220,8 +220,7 @@ pixel_biquad_vertb_s16:
 	movq (%ebx,%edx,1), %mm1	
 	movq (%ebx,%edx,2), %mm2	
 	movq (%ebx,%eax,1), %mm3
-	biquad_4x4_pixels
-	movq %mm0, (%ebx)	
+	biquad_4x4_pixels	movq %mm0, (%ebx)	
 	movq %mm1, (%ebx,%edx,1)	
 	movq %mm2, (%ebx,%edx,2)	
 	movq %mm3, (%ebx,%eax,1)

@@ -20,6 +20,8 @@
 
 #ifndef PDP_MATRIX_H
 #define PDP_MATRIX_H
+#include "pdp_config.h"
+#ifdef HAVE_PDP_GSL
 
 #include <stdio.h>
 #include <gsl/gsl_block.h>
@@ -89,6 +91,7 @@ int pdp_packet_matrix_blas_mv(CBLAS_TRANSPOSE_t TransA,
 int pdp_packet_matrix_LU(int p_matrix);
 int pdp_packet_matrix_LU_to_inverse(int p_matrix);
 int pdp_packet_matrix_LU_solve(int p_matrix, int p_vector);
+#endif
 
 
 #endif

@@ -4,6 +4,14 @@ known bugs:
 short story: don't, use pdp_control's memlimit for limiting pdp's memory usage.
 
 
+todo 0.14.1:
+
+* finalize MMX port (crot, randmix + low level conversion routines)
+* switch to new build system in project.mk
+* remove procqueue
+
+todo 0.14.0:
+* final tests
 
 
 todo 0.12.5:

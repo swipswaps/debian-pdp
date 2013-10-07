@@ -1,4 +1,4 @@
-#N canvas 561 22 736 727 10;
+#N canvas 683 29 681 161 10;
 #X obj 23 524 pdp_v4l;
 #X text 17 11 this abstraction is used as an input module in most of
 the documentation patches. change it to reflect your preferred input
@@ -49,7 +49,7 @@ object.;
 #X text 239 566 for noise input;
 #X text 293 137 disconnect for noise input;
 #X obj 492 255 ggee/getdir;
-#X msg 492 288 open \$1/../media/midr-mjpeg.mov;
+#X msg 492 288 open \$1/../../doc/media/midr-mjpeg.mov;
 #X obj 492 515 pdp_qt;
 #X connect 0 0 4 0;
 #X connect 2 0 30 0;
@@ -63,7 +63,7 @@ object.;
 #X connect 13 0 0 0;
 #X connect 14 0 41 0;
 #X connect 17 0 10 0;
-#X connect 18 0 14 0;
+#X connect 18 0 13 0;
 #X connect 21 0 41 0;
 #X connect 22 0 5 0;
 #X connect 30 0 22 0;

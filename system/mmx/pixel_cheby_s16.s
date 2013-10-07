@@ -63,8 +63,8 @@ pixel_cheby_s16_3plus:
 	psubsw %mm2, %mm3	# mm3 == (2 x T_n-1 - T_n-2) / 4
 	paddsw %mm3, %mm3
 	paddsw %mm3, %mm3	# mm3 == T_n
-	movq %mm1, %mm2		# mm2 == new T_n-1
-	movq %mm3, %mm1		# mm3 == new T_n-2
+	movq %mm1, %mm2		# mm2 == new T_n-2
+	movq %mm3, %mm1		# mm3 == new T_n-1
 	pmulhw (%edi), %mm3	# mm3 = a_n * T_n / 2
 	paddsw %mm3, %mm4	# accumulate
 	addl $8, %edi

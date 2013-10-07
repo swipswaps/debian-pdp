@@ -26,11 +26,10 @@ darwin:	pdp_all
 
 linux: pdp_all
 	rm -f pdp.pd_linux
-	$(CC) -export_dynamic -shared -o pdp.pd_linux modules/*/*.o system/pdp.o system/*/*.o puredata/*.o $(PDP_LIBS)
+	$(CC) -rdynamic -shared -o pdp.pd_linux modules/*/*.o system/pdp.o system/*/*.o puredata/*.o $(PDP_LIBS)
 
-linux_mmx: pdp_all
-	rm -f pdp.pd_linux
-	$(CC) -export_dynamic -shared -o pdp.pd_linux modules/*/*.o system/pdp.o system/*/*.o puredata/*.o $(PDP_LIBS)
+linux_mmx: linux
+linux_gcc_mmx: linux
 
 buildclean:
 	make -C include clean
@@ -82,6 +81,9 @@ install: all
 	install -m 644 doc/examples/*.pd $(prefix)/lib/pd/doc/pdp/examples
 	install -m 755 bin/pdp-config $(prefix)/bin
 
-dist:
+snapshot:
+	bin/snapshot -d darcs
+
+release:
 	bin/snapshot `bin/release-version`
-	echo bump PDP_VERSION in configure.ac!
+	@echo bump PDP_VERSION in configure.ac!
