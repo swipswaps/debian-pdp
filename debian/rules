@@ -6,6 +6,10 @@ ifeq ($(DEB_BUILD_ARCH),i386)
 DEB_CONFIGURE_EXTRA_FLAGS = --enable-mmx
 endif
 
+ifeq ($(DEB_BUILD_ARCH),amd64)
+DEB_CONFIGURE_EXTRA_FLAGS = --enable-mmx
+endif
+
 %:
 	dh $@ --with autoreconf
 
