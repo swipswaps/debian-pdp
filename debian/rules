@@ -34,3 +34,12 @@ override_dh_auto_clean:
 override_dh_installchangelogs:
 	dh_installchangelogs CHANGES.LOG
 
+override_dh_shlibdeps:
+	find debian/pd-pdp -name "*.pd_linux" -exec \
+		dpkg-shlibdeps -Tdebian/pd-pdp.substvars {} +
+
+override_dh_strip:
+	dh_strip
+	find debian -name "*.pd_linux" -exec \
+		strip --remove-section=.comment --remove-section=.note --strip-unneeded {} +
+
