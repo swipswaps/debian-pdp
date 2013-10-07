@@ -30,3 +30,7 @@ override_dh_auto_clean:
 	-$(RM) -f Makefile.config config.log config.status
 	-$(RM) -f pdp-config.1
 	dh clean --after dh_auto_clean
+
+override_dh_installchangelogs:
+	dh_installchangelogs CHANGES.LOG
+
