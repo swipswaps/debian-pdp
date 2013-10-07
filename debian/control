@@ -6,6 +6,7 @@ Uploaders: IOhannes m zmoelnig (gpg-key at iem) <zmoelnig@iem.at>
 Build-Depends: debhelper (>= 9),
  docbook-to-man,
  puredata-dev | puredata (>= 0.38),
+ libv4l-dev,
  libquicktime-dev,
  libsdl1.2-dev,
  libpng-dev,
