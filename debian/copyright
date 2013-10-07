@@ -23,11 +23,3 @@ License: GPL-2+
 
 This software is published under GPL terms, found on Debian systems in the file
 /usr/share/common-licenses/GPL-2.
-
-The patch 06_add_v4l2.patch was taken from PiDiP, also GPL-2 licensed:
-
-  Authors : Yves Degoyon ( ydegoyon@free.fr ) and Lluis Gomez i Bigorda
-
-  This object is a video 4 linux 2 driver wrapper,
-  inspired by pdp_v4l by Tom Schouten
-  and some driver code from xawtv ( thanks to Gerd Knorr <kraxel@bytesex.org> )

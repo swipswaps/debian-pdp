@@ -2,3 +2,4 @@
 05_kfreebsd.patch
 fix_typos.patch
 hardening.patch
+fix_v4l.patch
