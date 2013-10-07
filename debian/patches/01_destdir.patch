@@ -1,10 +1,8 @@
 Author: Debian
 Description: prepend $(DESTDIR) to installation targets
-diff --git a/Makefile b/Makefile
-index b60f283..79d80af 100644
---- a/Makefile
-+++ b/Makefile
-@@ -67,20 +67,20 @@ tagsclean:
+--- pdp.orig/Makefile
++++ pdp/Makefile
+@@ -66,20 +66,20 @@
  
  install: all
  	#check if pd is installed. if this fails make install will stop here.
@@ -37,5 +35,5 @@ index b60f283..79d80af 100644
 +	install -m 644 doc/examples/*.pd $(DESTDIR)$(prefix)/lib/pd/doc/pdp/examples
 +	install -m 755 bin/pdp-config $(DESTDIR)$(prefix)/bin
  
- dist:
- 	bin/snapshot `bin/release-version`
+ snapshot:
+ 	bin/snapshot -d darcs

@@ -13,7 +13,7 @@ Description: Fixing spelling mistakes
  	//t_ca     ca;             /* cellular automaton state data */
 --- pdp.orig/modules/image_io/pdp_qt.c
 +++ pdp/modules/image_io/pdp_qt.c
-@@ -339,7 +339,7 @@
+@@ -344,7 +344,7 @@
  	    break;
  
  	default:
@@ -22,7 +22,7 @@ Description: Fixing spelling mistakes
  	    break;
  	}
      
-@@ -543,7 +543,7 @@
+@@ -548,7 +548,7 @@
  	break;
  
      default:

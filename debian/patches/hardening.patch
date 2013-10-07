@@ -1,32 +1,5 @@
 Author: IOhannes m zmölnig
 Descriptions: allow pdp to be compiled with hardening flags
---- pdp.orig/modules/generic/pdp_rawout.c
-+++ pdp/modules/generic/pdp_rawout.c
-@@ -138,7 +138,7 @@
- 
-     /* open pipe */
-     if (-1 == (pipefd = open(x->x_pipe->s_name, O_WRONLY|O_NONBLOCK|O_APPEND))){
--	if (-1 == (pipefd = open(x->x_pipe->s_name, O_WRONLY|O_CREAT))){
-+	if (-1 == (pipefd = open(x->x_pipe->s_name, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR))){
- 	    perror(me);
- 	    goto exit;
- 	}
---- pdp.orig/Makefile
-+++ pdp/Makefile
-@@ -26,11 +26,11 @@
- 
- linux: pdp_all
- 	rm -f pdp.pd_linux
--	$(CC) -rdynamic -shared -o pdp.pd_linux modules/*/*.o system/pdp.o system/*/*.o puredata/*.o $(PDP_LIBS)
-+	$(CC) -rdynamic -shared -o pdp.pd_linux modules/*/*.o system/pdp.o system/*/*.o puredata/*.o $(PDP_LIBS) $(LDFLAGS)
- 
- linux_mmx: pdp_all
- 	rm -f pdp.pd_linux
--	$(CC) -rdynamic -shared -o pdp.pd_linux modules/*/*.o system/pdp.o system/*/*.o puredata/*.o $(PDP_LIBS)
-+	$(CC) -rdynamic -shared -o pdp.pd_linux modules/*/*.o system/pdp.o system/*/*.o puredata/*.o $(PDP_LIBS) $(LDFLAGS)
- 
- buildclean:
- 	make -C include clean
 --- pdp.orig/scaf/Makefile
 +++ pdp/scaf/Makefile
 @@ -26,7 +26,7 @@
@@ -38,3 +11,14 @@ Descriptions: allow pdp to be compiled with hardening flags
  
  install: all
  	install -d $(prefix)/lib/scaf
+--- pdp.orig/Makefile
++++ pdp/Makefile
+@@ -26,7 +26,7 @@
+ 
+ linux: pdp_all
+ 	rm -f pdp.pd_linux
+-	$(CC) -rdynamic -shared -o pdp.pd_linux modules/*/*.o system/pdp.o system/*/*.o puredata/*.o $(PDP_LIBS)
++	$(CC) -rdynamic -shared -o pdp.pd_linux modules/*/*.o system/pdp.o system/*/*.o puredata/*.o $(PDP_LIBS) $(LDFLAGS)
+ 
+ linux_mmx: linux
+ linux_gcc_mmx: linux
