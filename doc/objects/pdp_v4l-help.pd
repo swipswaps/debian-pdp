@@ -1,4 +1,4 @@
-#N canvas 283 209 927 686 10;
+#N canvas 0 33 1438 415 10;
 #X obj 107 53 metro 40;
 #X msg 159 14 stop;
 #X msg 107 14 bang;
@@ -23,11 +23,11 @@ yv12 (luma/chroma color) and greyscale are supported.;
 #X msg 271 483 freqMHz \$1;
 #X text 346 459 sets the v4l tuner frequency (in v4l units and MHz)
 ;
-#X obj 107 580 pdp_help_output;
-#X text 348 526 creation arguments: <input device> <capture format>
+#X obj 107 656 pdp_help_output;
+#X text 348 567 creation arguments: <input device> <capture format>
 ;
-#X text 347 620 i.e. if you get weird colours \, try;
-#X obj 601 620 pdp_v4l /dev/video RGB24;
+#X text 347 661 i.e. if you get weird colours \, try;
+#X obj 601 661 pdp_v4l /dev/video RGB24;
 #X text 206 14 pdp_v4l grabs video from the video4linux device. it
 sends out the most recently grabbed frame whenever a bang message is
 received \, and will then discard that frame (it will be sent out on
@@ -35,11 +35,11 @@ time at most). the output framerate is limited by the device only.
 ;
 #X text 206 89 (to make sure you receive every frame with little jitter
 \, poll pdp_v4l with a high rate metronome);
-#X text 348 554 capture format can be one of "auto" \, "YUV420P" \,
+#X text 348 595 capture format can be one of "auto" \, "YUV420P" \,
 "YUV422" \, "RGB24" or "RGB32". for most cards autodetect (default)
 should work. if not \, add the desired capture format argument when
 you create a pdp_v4l object.;
-#X obj 107 527 pdp_v4l;
+#X obj 107 568 pdp_v4l;
 #X text 349 338 sets the v4l channel (like tuner \, composite \, svideo
 \, ...);
 #X msg 212 366 norm PAL;
@@ -47,6 +47,9 @@ you create a pdp_v4l object.;
 #X msg 211 388 norm NTSC;
 #X msg 211 431 norm AUTO;
 #X text 349 377 sets the video norm;
+#X obj 146 592 route card;
+#X msg 209 529 info;
+#X obj 146 615 print;
 #X connect 0 0 28 0;
 #X connect 1 0 0 0;
 #X connect 2 0 0 0;
@@ -65,7 +68,10 @@ you create a pdp_v4l object.;
 #X connect 18 0 19 0;
 #X connect 19 0 28 0;
 #X connect 28 0 21 0;
+#X connect 28 1 35 0;
 #X connect 30 0 28 0;
 #X connect 31 0 28 0;
 #X connect 32 0 28 0;
 #X connect 33 0 28 0;
+#X connect 35 0 37 0;
+#X connect 36 0 28 0;

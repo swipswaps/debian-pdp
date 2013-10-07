@@ -112,7 +112,7 @@ void pdp_inspect_setup(void)
     pdp_inspect_class = class_new(gensym("pdp_inspect_ro"), (t_newmethod)pdp_inspect_new,
     	(t_method)pdp_inspect_free, sizeof(t_pdp_inspect), 0, A_GIMME, A_NULL);
 
-    class_addcreator((t_newmethod)pdp_inspect_new, gensym("pdp_t"), A_GIMME, 0);
+//    class_addcreator((t_newmethod)pdp_inspect_new, gensym("pdp_t"), A_GIMME, 0);
     
     class_addmethod(pdp_inspect_class, (t_method)pdp_inspect_input_0, gensym("pdp"),  A_SYMBOL, A_DEFFLOAT, A_NULL);
 

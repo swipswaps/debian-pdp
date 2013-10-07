@@ -164,4 +164,17 @@ v0.12:	2003/06/21
 	pd-0.40 compatibility
 	sdl delayed window creation
 
+0.12.6:
+        fixes to pdp_imageproc from John Harrison
+        64-bit support
+        other random fixes
+        build fixes
 
+0.13:
+        Reserved for PF (http://zwizwa.be/packetforth/)
+        PF is a PDP spinoff.
+
+0.14.0: 
+        Port ia32 MMX assembly code to GCC extensions (MMX support on amd64)
+        Add V4L2 support to pdp_v4l (merge with pdp_v4l2)
+        Distill system/zl (Zwizwa Lib) from PDP and libprim/PF code.

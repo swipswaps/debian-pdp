@@ -3,13 +3,20 @@ AC_CONFIG_HEADER(include/pdp_config.h)
 AC_PROG_CC
 AC_HEADER_STDC
 
-dnl TAG CVS WHEN RELEASE VERSION CHANGES !!!
 
-PDP_VERSION=0.12.5
+dnl TAG REPO WHEN RELEASE VERSION CHANGES !!!
+dnl After changing version, do "make mrproper ; sh bootstrap"
+
+PDP_VERSION=0.14.0
+
+
 AC_SUBST(PDP_VERSION)
 
 AC_ARG_ENABLE(mmx,    
 	[  --enable-mmx            enable MMX support (no)], , enable_mmx=no)
+
+AC_ARG_ENABLE(asm-mmx,    
+	[  --enable-asm-mmx        enable MMX support, assembly code (32bit only) (no)], , enable_asm_mmx=no)
 
 AC_ARG_ENABLE(quicktime,    
 	[  --enable-quicktime      enable libquicktime support (yes)], , enable_quicktime=yes)
@@ -41,6 +48,11 @@ AC_ARG_ENABLE(png,
 AC_ARG_ENABLE(debug,    
 	[  --enable-debug          enable debugging support (no)], , enable_debug=no)
 
+AC_ARG_WITH([pd],
+  [  --with-pd=</path/to/pd> where to look for pd-headers and and -libs])
+
+
+
 
 # long double? -Wno-long-double
 PDP_CFLAGS="-DPD -Wall -W -Wstrict-prototypes -Wno-unused -Wno-parentheses -Wno-switch -fPIC"
@@ -54,7 +66,7 @@ dnl setup debugging
 if test $enable_debug == yes
 then
 	AC_DEFINE(PDP_DEBUG, 1, "enable debugging support")
-	PDP_CFLAGS="$PDP_CFLAGS -g -Werror"
+	PDP_CFLAGS="$PDP_CFLAGS -g -Werror -DDEBUG"
 else
 	AC_DEFINE(PDP_DEBUG, 0, "disable debugging support")	
 	PDP_CFLAGS="$PDP_CFLAGS -O2 -funroll-loops -fomit-frame-pointer -ffast-math"
@@ -77,21 +89,45 @@ dnl try to locate the pd header in case the setup is nonstandard
 dnl check in  $prefix/pd/src then ../pd/src 
 dnl if this fails we trust it is in the standard include path
 PWD=`pwd`
-if test -f $prefix/pd/src/m_pd.h;
-then
-	PD_CPPFLAGS="-I$prefix/pd/src"
 
-elif test -f $prefix/src/pd/src/m_pd.h;
-then
-	PD_CPPFLAGS="-I$prefix/src/pd/src"
-elif test -f $PWD/../pd/src/m_pd.h;
-then
-	PD_CPPFLAGS="-I$PWD/../pd/src"
-elif test -f $PWD/../src/m_pd.h;
-then
-	PD_CPPFLAGS="-I$PWD/../src"
+if test "x$with_pd" != "x"; then
+ if test -d "${with_pd}"; then
+   PDPATH=${with_pd}
+ fi
+ if test -d "${PDPATH}/src"; then
+  AC_MSG_RESULT([adding ${PDPATH}/src to INCLUDES])
+  PD_CPPFLAGS="-I${PDPATH}/src"
+
+  AC_MSG_RESULT([adding ${PDPATH}/src to LDFLAGS])
+  LDFLAGS="-L${PDPATH}/src ${LDFLAGS}"
+ else
+  if test -d "${PDPATH}"; then
+   AC_MSG_RESULT([adding ${PDPATH} to INCLUDES])
+   PD_CPPFLAGS="-I${PDPATH}"
+  fi
+ fi
+else
+dnl try some defaults
+ if test -f $prefix/pd/src/m_pd.h;
+ then
+  PD_CPPFLAGS="-I$prefix/pd/src"
+ elif test -f $prefix/src/pd/src/m_pd.h;
+ then
+  PD_CPPFLAGS="-I$prefix/src/pd/src"
+ elif test -f $PWD/../pd/src/m_pd.h;
+ then
+  PD_CPPFLAGS="-I$PWD/../pd/src"
+ elif test -f $PWD/../src/m_pd.h;
+ then
+  PD_CPPFLAGS="-I$PWD/../src"
+ elif test -f /usr/local/include/pd/m_pd.h;
+ then
+  PD_CPPFLAGS="-I/usr/local/include/pd"
+ elif test -f /usr/include/pd/m_pd.h;
+ then
+  PD_CPPFLAGS="-I/usr/include/pd"
+ fi
 fi
-
 
 CPPFLAGS="$CPPFLAGS $PD_CPPFLAGS"
 AC_CHECK_HEADER(m_pd.h,,
@@ -107,10 +143,18 @@ then
 
 	if test $enable_mmx == yes;
 	then
-		PDP_TARGET=linux_mmx
-	else
-		PDP_TARGET=linux
-	fi
+                PDP_TARGET=linux_gcc_mmx
+                PDP_CFLAGS="$PDP_CFLAGS -mmmx"
+
+        elif test $enable_asm_mmx == yes;
+        then
+                PDP_TARGET=linux_mmx
+                PDP_CFLAGS="$PDP_CFLAGS -mmmx"
+        else
+                PDP_TARGET=linux
+        fi
+
+
 elif test $ARCH == Darwin;
 then
 	PDP_LIBRARY_NAME=pdp.pd_darwin
@@ -133,28 +177,65 @@ then
 
 dnl if not darwin, assume target is linux
 else
-	AC_CHECK_HEADER(linux/videodev.h,
+  have_v4l="no"
+  have_libv4l="no"
+  AC_CHECK_HEADERS([libv4l1-videodev.h], have_v4l="yes")
+  AC_CHECK_HEADERS([linux/videodev.h], have_libv4l="yes")
+
+  if test "x$have_libv4l" = "xyes"
+  then
+    have_v4l="yes"
+  fi
+
+  if test "x$enable_v4l" = "xno"
+  then
+   have_v4l="no"
+  fi
+
+  if test "x$have_v4l" = "xyes"
+  then
+                ZL_OPTMOD="$ZL_OPTMOD v4l.o"
 		PDP_OPTMOD="$PDP_OPTMOD pdp_v4l.o"
-		AC_DEFINE(HAVE_PDP_V4L, 1, build pdp_v4l),
-		echo "   linux/videodev.h not found: not building pdp_v4l")
+		AC_DEFINE(HAVE_PDP_V4L, 1, [build pdp_v4l])
 
-
+    if test "x$have_libv4l" = "xyes"
+    then
+  		AC_DEFINE(HAVE_PDP_LIBV4L, 1, [build pdp_v4l with libv4l])
+      PDP_V4L_CFLAGS="`pkg-config --cflags libv4l 2>/dev/null || pkg-config --cflags libv4l2`"
+      PDP_V4L_LIBS="`pkg-config --libs libv4l 2>/dev/null || pkg-config --libs libv4l2`"
+    else
+      PDP_V4L_CFLAGS=""
+      PDP_V4L_LIBS=""
+    fi
+    PDP_CFLAGS="$PDP_CFLAGS $PDP_V4L_CFLAGS"
+    LIBS="$LIBS $PDP_V4L_LIBS"
+  else
+    AC_MSG_RESULT([not building pdp_v4l])
+  fi
 fi
 
 dnl optional gsl support
 if test $enable_gsl == yes;
 then
-	AC_CHECK_LIB(gslcblas,main)
-	AC_CHECK_LIB(gsl,main,
-		PDP_OPTTYPES="$PDP_OPTTYPES pdp_matrix.o"
-		PDP_MATRIX_BASIC="$PDP_MATRIX_BASIC pdp_mat_mul.o pdp_mat_lu.o pdp_mat_vec.o"
-		PDP_IMAGE_BASIC="$PDP_IMAGE_BASIC pdp_cheby.o"
-		PDP_IMAGE_SPECIAL="$PDP_IMAGE_SPECIAL pdp_histo.o"
-		AC_DEFINE(HAVE_PDP_GSL, 1, gsl support)
-		LIBS="$LIBS -lgslcblas -lgsl",
-		echo "   libgsl not found: not building matrix type support")
+  AC_CHECK_LIB(gslcblas,main)
+  AC_CHECK_LIB(gsl,main,
+    PDP_OPTTYPES="$PDP_OPTTYPES pdp_matrix.o"
+    PDP_MATRIX_BASIC="$PDP_MATRIX_BASIC pdp_mat_mul.o pdp_mat_lu.o pdp_mat_vec.o"
+    PDP_IMAGE_BASIC="$PDP_IMAGE_BASIC pdp_cheby.o"
+    PDP_IMAGE_SPECIAL="$PDP_IMAGE_SPECIAL pdp_histo.o"
+    AC_DEFINE(HAVE_PDP_GSL, 1, gsl support)
+    PDP_GSL_FOUND=1,
+    echo "   libgsl not found: not building matrix type support")
 
-
+  if test -n "$PDP_GSL_FOUND"; then
+    if test $ARCH == Darwin
+    then
+      LIBS="$LIBS -lgslcblas -lgsl"
+    else
+      dnl if not darwin, assume target is linux
+      LIBS="$LIBS `pkg-config --libs gsl`"
+    fi
+  fi
 fi
 
 
@@ -172,7 +253,7 @@ dnl optional xwindow support
 if test $enable_x == yes;
 then
 	AC_CHECK_LIB(X11, XOpenDisplay,
-		PDP_X11MOD="$PDP_X11MOD pdp_xwindow.o"
+		ZL_OPTMOD="$ZL_OPTMOD xwindow.o"
 		AC_DEFINE(HAVE_PDP_X, 1, build X11 support)
 		LIBS="$LIBS -L/usr/X11R6/lib -lX11",
 		echo "   libX11 not found: not building X11 support",
@@ -189,7 +270,7 @@ dnl optional xvideo support
 if test $enable_xv == yes;
 then
 	AC_CHECK_LIB(Xv, XvPutImage,
-		PDP_X11MOD="$PDP_X11MOD pdp_xvideo.o"
+		ZL_OPTMOD="$ZL_OPTMOD xv.o"
 		PDP_OPTMOD="$PDP_OPTMOD pdp_xv.o"
 		LIBS="$LIBS -lXv -lXext"
 		AC_DEFINE(HAVE_PDP_XV, 1, build pdp_xv),
@@ -212,6 +293,7 @@ dnl optional glx support
 if test $enable_glx == yes
 then
 	AC_CHECK_LIB(GL, glXSwapBuffers,
+                ZL_OPTMOD="$ZL_OPTMOD glx.o"
 		PDP_OPTMOD="$PDP_OPTMOD pdp_glx.o"
 		LIBS="$LIBS -lGL -lGLU"
 		AC_DEFINE(HAVE_PDP_GLX, 1, build pdp_glx),
@@ -256,7 +338,7 @@ AC_SUBST(PDP_LIBRARY_NAME)
 AC_SUBST(PDP_TARGET)
 
 AC_SUBST(PDP_OPTMOD)
-AC_SUBST(PDP_X11MOD)
+AC_SUBST(ZL_OPTMOD)
 AC_SUBST(PDP_PDMOD)
 AC_SUBST(PDP_OPTTYPES)
 

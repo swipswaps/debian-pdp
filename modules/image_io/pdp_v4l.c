@@ -16,754 +16,357 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
+ *   2012-10-29 : V4L2 support from Pidip's pdp_v4l2
+ *                Thanks to Yves Degoyon, Lluis Gomez i Bigorda, Gerd Knorr)
+ *
  */
+
 
 
 #include "pdp_config.h"
 #include "pdp.h"
 #include "pdp_llconv.h"
 #include "pdp_imageproc.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <unistd.h>
-#include <string.h>
+
+#include "zl/v4l.h"
+
 #include <ctype.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <linux/types.h>
-#include <linux/videodev.h>
-#include <sys/mman.h>
-#include <sched.h>
-#include <pthread.h>
 
-// dont open any more after a set number 
-// of failed attempts
-// this is to prevent locks on auto-open
-// is reset when manually opened or closed
-#define PDP_XV_RETRIES 10
+static const int UVTranslate[32] = {0, 1, 2, 3, 
+                        8, 9, 10, 11, 
+                        16, 17, 18, 19, 
+                        24, 25, 26, 27, 
+                        4, 5, 6, 7,
+                        12, 13, 14, 15,
+                        20, 21, 22, 23,
+                        28, 29, 30, 31};
 
-//include it anyway
-//#ifdef HAVE_PWCV4L
-#include "pwc-ioctl.h"
-//#endif
+static const int Y_coords_624x[128][2] = {
+{ 0,  0}, { 1,  0}, { 2,  0}, { 3,  0}, { 4,  0}, { 5,  0}, { 6,  0}, { 7,  0},
+{ 0,  1}, { 1,  1}, { 2,  1}, { 3,  1}, { 4,  1}, { 5,  1}, { 6,  1}, { 7,  1},
+{ 0,  2}, { 1,  2}, { 2,  2}, { 3,  2}, { 4,  2}, { 5,  2}, { 6,  2}, { 7,  2},
+{ 0,  3}, { 1,  3}, { 2,  3}, { 3,  3}, { 4,  3}, { 5,  3}, { 6,  3}, { 7,  3},
+
+{ 0,  4}, { 1,  4}, { 2,  4}, { 3,  4}, { 4,  4}, { 5,  4}, { 6,  4}, { 7,  4},
+{ 0,  5}, { 1,  5}, { 2,  5}, { 3,  5}, { 4,  5}, { 5,  5}, { 6,  5}, { 7,  5},
+{ 0,  6}, { 1,  6}, { 2,  6}, { 3,  6}, { 4,  6}, { 5,  6}, { 6,  6}, { 7,  6},
+{ 0,  7}, { 1,  7}, { 2,  7}, { 3,  7}, { 4,  7}, { 5,  7}, { 6,  7}, { 7,  7},
+
+{ 8,  0}, { 9,  0}, {10,  0}, {11,  0}, {12,  0}, {13,  0}, {14,  0}, {15,  0},
+{ 8,  1}, { 9,  1}, {10,  1}, {11,  1}, {12,  1}, {13,  1}, {14,  1}, {15,  1},
+{ 8,  2}, { 9,  2}, {10,  2}, {11,  2}, {12,  2}, {13,  2}, {14,  2}, {15,  2},
+{ 8,  3}, { 9,  3}, {10,  3}, {11,  3}, {12,  3}, {13,  3}, {14,  3}, {15,  3},
+
+{ 8,  4}, { 9,  4}, {10,  4}, {11,  4}, {12,  4}, {13,  4}, {14,  4}, {15,  4},
+{ 8,  5}, { 9,  5}, {10,  5}, {11,  5}, {12,  5}, {13,  5}, {14,  5}, {15,  5},
+{ 8,  6}, { 9,  6}, {10,  6}, {11,  6}, {12,  6}, {13,  6}, {14,  6}, {15,  6},
+{ 8,  7}, { 9,  7}, {10,  7}, {11,  7}, {12,  7}, {13,  7}, {14,  7}, {15,  7}
+};
+
+static void do_write_u(const unsigned char *buf, unsigned char *ptr,
+        int i, int j)
+{
+        *ptr = buf[i + 128 + j];
+}
+
+static void do_write_v(const unsigned char *buf, unsigned char *ptr,
+        int i, int j)
+{
+        *ptr = buf[i + 160 + j];
+}
 
 
-#define DEVICENO 0
-#define NBUF 2
-#define COMPOSITEIN 1
+void v4lconvert_sn9c20x_to_yuv420(const unsigned char *raw, unsigned char *i420,
+  int width, int height, int yvu)
+{
+        int i = 0, x = 0, y = 0, j, relX, relY, x_div2, y_div2;
+        const unsigned char *buf = raw;
+        unsigned char *ptr;
+        int frame_size = width * height;
+        int frame_size_div2 = frame_size >> 1;
+        int frame_size_div4 = frame_size >> 2;
+        int width_div2 = width >> 1;
+        int height_div2 = height >> 1;
+        void (*do_write_uv1)(const unsigned char *buf, unsigned char *ptr, int i,
+        int j) = NULL;
+        void (*do_write_uv2)(const unsigned char *buf, unsigned char *ptr, int i,
+        int j) = NULL;
+
+        if (yvu) {
+                do_write_uv1 = do_write_v;
+                do_write_uv2 = do_write_u;
+        }
+        else {
+                do_write_uv1 = do_write_u;
+                do_write_uv2 = do_write_v;
+        }
+
+        while (i < (frame_size + frame_size_div2)) {
+                for (j = 0; j < 128; j++) {
+                        relX = x + Y_coords_624x[j][0];
+                        relY = y + Y_coords_624x[j][1];
+
+#if (DO_SANITY_CHECKS==1)
+                        if ((relX < width) && (relY < height)) {
+#endif
+                                ptr = i420 + relY * width + relX;
+                                *ptr = buf[i + j];
+#if (DO_SANITY_CHECKS==1)
+                        }
+#endif
+
+                }
+                x_div2 = x >> 1;
+                y_div2 = y >> 1;
+                for (j = 0; j < 32; j++) {
+                        relX = (x_div2) + (j & 0x07);
+                        relY = (y_div2) + (j >> 3);
+
+#if (DO_SANITY_CHECKS==1)
+                        if ((relX < width_div2) && (relY < height_div2)) {
+#endif
+                                ptr = i420 + frame_size +
+                                        relY * width_div2 + relX;
+                                do_write_uv1(buf, ptr, i, j);
+                                ptr += frame_size_div4;
+                                do_write_uv2(buf, ptr, i, j);
+#if (DO_SANITY_CHECKS==1)
+                        }
+#endif
+                }
+
+                i += 192;
+                x += 16;
+                if (x >= width) {
+                        x = 0;
+                        y += 8;
+                }
+        }
+}
 
 
 
+/* Pd / PDP stuff */
 
 typedef struct pdp_v4l_struct
 {
-  t_object x_obj;
-  t_float x_f;
-  
-  t_outlet *x_outlet0;
-
-  int x_format; // 0 means autodetect  
-
-  bool x_initialized;
-  bool x_auto_open;
-
-  unsigned int x_width;
-  unsigned int x_height;
-  int x_channel;
-  unsigned int x_norm;
-  int x_freq;
-
-  unsigned int x_framerate;
-
-  struct video_tuner x_vtuner;
-  struct video_picture x_vpicture;
-  struct video_buffer x_vbuffer;
-  struct video_capability x_vcap;
-  struct video_channel x_vchannel;
-  struct video_audio x_vaudio;
-  struct video_mbuf x_vmbuf;
-  struct video_mmap x_vmmap[NBUF];
-  struct video_window x_vwin;
-  int x_tvfd;
-  int x_frame;
-  unsigned char *x_videobuf;
-  int x_skipnext;
-  int x_mytopmargin, x_mybottommargin;
-  int x_myleftmargin, x_myrightmargin;
-
+    /* Pd stuff */
+    t_object x_obj;
+    t_float x_f;
+    t_outlet *x_outlet0;
+    t_outlet *x_outlet1;
     t_symbol *x_device;
     t_symbol *x_image_type;
-    //int x_pdp_image_type;
-    int x_v4l_palette;
-
-    pthread_t x_thread_id;
-    int x_continue_thread;
-    int x_frame_ready;
-    int x_only_new_frames;
-    int x_last_frame;
 
 
-    int x_open_retry;
-
+#if 0 // FIXME: not used
     u32 x_minwidth;
     u32 x_maxwidth;
     u32 x_minheight;
     u32 x_maxheight;
+#endif
 
+    /* Most of the work is done in the atapter object. */
+    struct zl_v4l zl;
+
+    /* Generic */
 
 } t_pdp_v4l;
 
 
 
 
-
-static void pdp_v4l_audio(t_pdp_v4l *x, t_floatarg f)
-{
-    int i = 0;
-    if (x->x_initialized){
-	fprintf(stderr,"  audios  : %d\n",x->x_vcap.audios);
-	x->x_vaudio.audio = 0;
-        ioctl(x->x_tvfd,VIDIOCGAUDIO, &x->x_vaudio);
-
-	fprintf(stderr,"    %d (%s): ",i,x->x_vaudio.name);
-	if (x->x_vaudio.flags & VIDEO_AUDIO_MUTABLE)
-	    fprintf(stderr,"muted=%s ",
-		    (x->x_vaudio.flags & VIDEO_AUDIO_MUTE) ? "yes":"no");
-	if (x->x_vaudio.flags & VIDEO_AUDIO_VOLUME)
-	    fprintf(stderr,"volume=%d ",x->x_vaudio.volume);
-	if (x->x_vaudio.flags & VIDEO_AUDIO_BASS)
-	    fprintf(stderr,"bass=%d ",x->x_vaudio.bass);
-	if (x->x_vaudio.flags & VIDEO_AUDIO_TREBLE)
-	    fprintf(stderr,"treble=%d ",x->x_vaudio.treble);
-	fprintf(stderr,"\n");
-	
-    }
+/* Shared code (independent of V4L1/V4L2) */
+static void pdp_v4l_close(t_pdp_v4l *x) {
+    zl_v4l_close(&x->zl);
+}
+static void pdp_v4l_open(t_pdp_v4l *x, t_symbol *name) {
+    zl_v4l_open(&x->zl, name->s_name, true);
+}
+static void pdp_v4l_close_error(t_pdp_v4l *x) {
+    zl_v4l_close_error(&x->zl);
 }
 
 
-static void pdp_v4l_close(t_pdp_v4l *x)
-{
-  /* close the v4l device and dealloc buffer */
-
-    void *dummy;
-
-    /* terminate thread if there is one */
-    if(x->x_continue_thread){
-	x->x_continue_thread = 0;
-	pthread_join (x->x_thread_id, &dummy);
-    }
-
-
-    if (x->x_tvfd >= 0)
-    {
-        close(x->x_tvfd);
-        x->x_tvfd = -1;
-    }
-
-    if (x->x_initialized){
-	munmap(x->x_videobuf, x->x_vmbuf.size);
-	x->x_initialized = false;
-    }
-
+static void control(t_pdp_v4l *x, int id, int value) {
+    const char *name = zl_v4l_control_name(id);
+    post("pdp_v4l: control (%08x) %s %d", id, name, value);
+    zl_v4l_control(&x->zl, id, value);
 }
 
-static void pdp_v4l_close_manual(t_pdp_v4l *x)
-{
-    x->x_open_retry = PDP_XV_RETRIES;
-    pdp_v4l_close(x);
-
-}
-
-static void pdp_v4l_close_error(t_pdp_v4l *x)
-{
-    pdp_v4l_close(x);
-    if(x->x_open_retry) x->x_open_retry--;
-}
-
-static void pdp_v4l_pwc_agc(t_pdp_v4l *x, float gain){
-    gain *= (float)(1<<16);
-    int g = (int)gain;
-    if (g < 0) g = -1;            // automatic
-    if (g > 1<<16) g = 1<<16 - 1; // fixed
-
-    //post("pdp_v4l: setting agc to %d", g);
-    if (ioctl(x->x_tvfd, VIDIOCPWCSAGC, &g)){
-	post("pdp_v4l: pwc: VIDIOCPWCSAGC");
-	//goto closit;
+static void pdp_v4l_control(t_pdp_v4l *x, t_symbol *s, t_float f1, t_float f2) {
+    /* | "id" id value < */
+    if (s == gensym("id")) {
+        control(x, f1, f2);
     }
-}
-
-static void pdp_v4l_pwc_init(t_pdp_v4l *x)
-{
-    struct pwc_probe probe;
-    int isPhilips = 0;
-
-#ifdef HAVE_PWCV4L
-    /* skip test */
-    isPhilips = 1;
-#else
-    /* test for pwc */
-    if (ioctl(x->x_tvfd, VIDIOCPWCPROBE, &probe) == 0)
-       if (!strcmp(x->x_vcap.name, probe.name))
-         isPhilips = 1;
-
-#endif
-    
-    /* don't do pwc specific stuff */
-    if (!isPhilips) return;
-
-    post("pdp_v4l: detected pwc");
-
-
-    if(ioctl(x->x_tvfd, VIDIOCPWCRUSER)){
-	perror("pdp_v4l: pwc: VIDIOCPWCRUSER");
-	goto closit;
-    }
-
-    /* this is a workaround:
-       we disable AGC after restoring user prefs
-       something is wrong with newer cams (like Qickcam 4000 pro)
-    */
-
-    if (1){
-	pdp_v4l_pwc_agc(x, 1.0);
-    }
-
- 
-    if (ioctl(x->x_tvfd, VIDIOCGWIN, &x->x_vwin)){
-	perror("pdp_v4l: pwc: VIDIOCGWIN");
-	goto closit;
-    }
-
-
-    
-    if (x->x_vwin.flags & PWC_FPS_MASK){
-	//post("pdp_v4l: pwc: camera framerate: %d", (x->x_vwin.flags & PWC_FPS_MASK) >> PWC_FPS_SHIFT);
-	//post("pdp_v4l: pwc: setting camera framerate to %d", x->x_framerate);
-	x->x_vwin.flags &= PWC_FPS_MASK;
-	x->x_vwin.flags |= (x->x_framerate << PWC_FPS_SHIFT);
-	if (ioctl(x->x_tvfd, VIDIOCSWIN, &x->x_vwin)){
-	    perror("pdp_v4l: pwc: VIDIOCSWIN");
-	    goto closit;
-	}
-	if (ioctl(x->x_tvfd, VIDIOCGWIN, &x->x_vwin)){
-	    perror("pdp_v4l: pwc: VIDIOCGWIN");
-	    goto closit;
-	}
-	post("pdp_v4l: camera framerate set to %d fps", (x->x_vwin.flags & PWC_FPS_MASK) >> PWC_FPS_SHIFT);
-
-    }
-    
-    
-    return;
-  
-
-
- closit:
-    pdp_v4l_close_error(x);
-    return;
-
-}
-
-static void pdp_v4l_sync_frame(t_pdp_v4l* x){
-    /* grab frame */
-    if (ioctl(x->x_tvfd, VIDIOCSYNC, &x->x_vmmap[x->x_frame].frame) < 0){
-	perror("pdp_v4l: VIDIOCSYNC");
-	pdp_v4l_close(x);
-	return;
-    }
-} 
-
-static void pdp_v4l_capture_frame(t_pdp_v4l* x){
-    if (ioctl(x->x_tvfd, VIDIOCMCAPTURE, &x->x_vmmap[x->x_frame]) < 0){
-	if (errno == EAGAIN)
-	    post("pdp_v4l: can't sync (no video source?)\n");
-	else 
-	    perror("pdp_v4l: VIDIOCMCAPTURE");
-	if (ioctl(x->x_tvfd, VIDIOCMCAPTURE, &x->x_vmmap[x->x_frame]) < 0)
-	    perror("pdp_v4l: VIDIOCMCAPTURE2");
-	
-	post("pdp_v4l: frame %d %d, format %d, width %d, height %d",
-	     x->x_frame, x->x_vmmap[x->x_frame].frame, x->x_vmmap[x->x_frame].format,
-	     x->x_vmmap[x->x_frame].width, x->x_vmmap[x->x_frame].height);
-	
-	pdp_v4l_close(x);
-	return;
-    }
-}
-
-
-static void *pdp_v4l_thread(void *voidx)
-{
-    t_pdp_v4l *x = ((t_pdp_v4l *)voidx);
-
-
-    /* flip buffers */
-    x->x_frame ^= 0x1;
-
-    /* capture with a double buffering scheme */
-    while (x->x_continue_thread){
-
-	/* schedule capture command for next frame */
-	pdp_v4l_capture_frame(x);
-
-	/* wait until previous capture is ready */
-	x->x_frame ^= 0x1;
-	pdp_v4l_sync_frame(x);
-
-	/* setup pointers for main thread */
-	x->x_frame_ready = 1;
-	x->x_last_frame = x->x_frame;
-
-    }
-
-    return 0;
-}
-
-static void pdp_v4l_setlegaldim(t_pdp_v4l *x, int xx, int yy);
-
-static void pdp_v4l_open(t_pdp_v4l *x, t_symbol *name)
-{
-  /* open a v4l device and allocate a buffer */
-
-    unsigned int size;
-    int i;
-
-    unsigned int width, height;
-
-
-    /* if already opened -> close */
-    if (x->x_initialized) pdp_v4l_close(x);
-
-
-    /* exit if retried too much */
-    if (!x->x_open_retry){
-	post("pdp_v4l: retry count reached zero for %s", name->s_name);
-	post("pdp_v4l: try to open manually");
-	return;
-    }
-
-    post("pdp_v4l: opening %s", name->s_name);
-
-    x->x_device = name;
-
-    if ((x->x_tvfd = open(name->s_name, O_RDWR)) < 0)
-    {
-      post("pdp_v4l: error:");
-        perror(name->s_name);
-        goto closit;
-    }
-
-
-    if (ioctl(x->x_tvfd, VIDIOCGCAP, &x->x_vcap) < 0)
-    {
-        perror("get capabilities");
-        goto closit;
-    }
-
-    post("pdp_v4l: cap: name %s type %d channels %d maxw %d maxh %d minw %d minh %d",
-        x->x_vcap.name, x->x_vcap.type,  x->x_vcap.channels,  x->x_vcap.maxwidth,  x->x_vcap.maxheight,
-            x->x_vcap.minwidth,  x->x_vcap.minheight);
-
-    x->x_minwidth = pdp_imageproc_legalwidth(x->x_vcap.minwidth);
-    x->x_maxwidth = pdp_imageproc_legalwidth_round_down(x->x_vcap.maxwidth);
-    x->x_minheight = pdp_imageproc_legalheight(x->x_vcap.minheight);
-    x->x_maxheight = pdp_imageproc_legalheight_round_down(x->x_vcap.maxheight);
-
- 
-    if (ioctl(x->x_tvfd, VIDIOCGPICT, &x->x_vpicture) < 0)
-    {
-        perror("VIDIOCGCAP");
-        goto closit;
-    }
-    
-    post("pdp_v4l: picture: brightness %d depth %d palette %d",
-            x->x_vpicture.brightness, x->x_vpicture.depth, x->x_vpicture.palette);
-
-    /* get channel info */
-    for (i = 0; i < x->x_vcap.channels; i++)
-    {
-        x->x_vchannel.channel = i;
-        if (ioctl(x->x_tvfd, VIDIOCGCHAN, &x->x_vchannel) < 0)
-        {
-            perror("VDIOCGCHAN");
-            goto closit;
-        }
-        post("pdp_v4l: channel %d name %s type %d flags %d",
-            x->x_vchannel.channel, x->x_vchannel.name, 
-            x->x_vchannel.type, x->x_vchannel.flags);
-    }
-
-    /* switch to the desired channel */
-    if (x->x_channel < 0) x->x_channel = 0;
-    if (x->x_channel >= x->x_vcap.channels) x->x_channel = x->x_vcap.channels - 1;
-
-    x->x_vchannel.channel = x->x_channel;
-    if (ioctl(x->x_tvfd, VIDIOCGCHAN, &x->x_vchannel) < 0)
-    {
-        perror("pdp_v4l: warning: VDIOCGCHAN");
-        post("pdp_v4l: cant change to channel %d",x->x_channel);
-
-        // ignore error
-        // goto closit;
-    }
-    else{
-	post("pdp_v4l: switched to channel %d", x->x_channel);
-    }
-
-
-    /* set norm */
-    x->x_vchannel.norm = x->x_norm;
-    if (ioctl(x->x_tvfd, VIDIOCSCHAN, &x->x_vchannel) < 0)
-    {
-        perror("pdp_v4l: warning: VDIOCSCHAN");
-        post("pdp_v4l: cant change to norm %d",x->x_norm);
-        
-        // ignore error
-        // goto closit;
-    }
+    /* Named controls.  These come straight from /usr/include/linux/0videodev2.h */
+#define ZL_V4L_CTRL(id,...) else if (s == gensym(#id)) control(x, V4L2_CID_ ##id, f1);
+    ZL_V4L_CTRL_LIST
+#undef ZL_V4L_CTRL
     else {
-	post("pdp_v4l: set norm to %u", x->x_norm);
+        post("pdp_v4l: unknown control %s", s->s_name);
     }
-
-    if (x->x_freq > 0){
-	if (ioctl(x->x_tvfd, VIDIOCSFREQ, &x->x_freq) < 0)
-	    perror ("couldn't set frequency :");
-    }
-
-
-   
-
-    /* get mmap numbers */
-    if (ioctl(x->x_tvfd, VIDIOCGMBUF, &x->x_vmbuf) < 0)
-    {
-        perror("pdp_v4l: VIDIOCGMBUF");
-        goto closit;
-    }
-    post("pdp_v4l: buffer size %d, frames %d, offset %d %d", x->x_vmbuf.size,
-        x->x_vmbuf.frames, x->x_vmbuf.offsets[0], x->x_vmbuf.offsets[1]);
-    if (!(x->x_videobuf = (unsigned char *)
-        mmap(0, x->x_vmbuf.size, PROT_READ|PROT_WRITE, MAP_SHARED, x->x_tvfd, 0)))
-    {
-        perror("pdp_v4l: mmap");
-        goto closit;
-    }
-
-    pdp_v4l_setlegaldim(x, x->x_width, x->x_height);
-    width = x->x_width;
-    height = x->x_height;
-
-    for (i = 0; i < NBUF; i++)
-    {
-      //x->x_vmmap[i].format = VIDEO_PALETTE_YUV420P;
-      //x->x_vmmap[i].format = VIDEO_PALETTE_UYVY;
-      x->x_vmmap[i].width = width;
-      x->x_vmmap[i].height = height;
-      x->x_vmmap[i].frame  = i;
-    }
-
-
-/* fallthrough macro for case statement */
-#define TRYPALETTE(palette)							\
-	x->x_v4l_palette = palette;						\
-	for (i = 0; i < NBUF; i++) x->x_vmmap[i].format = x->x_v4l_palette;	\
-	if (ioctl(x->x_tvfd, VIDIOCMCAPTURE, &x->x_vmmap[x->x_frame]) < 0)	\
-	    {									\
-		if (errno == EAGAIN)						\
-		    post("pdp_v4l: can't sync (no video source?)");		\
-		if (x->x_format) break; /* only break if not autodetecting */	\
-	    }									\
-	else{									\
-	    post("pdp_v4l: using " #palette);					\
-	    goto capture_ok;							\
-	}
-
-    switch(x->x_format){
-    default:
-    case 0:
-    case 1: TRYPALETTE(VIDEO_PALETTE_YUV420P);
-    case 2: TRYPALETTE(VIDEO_PALETTE_YUV422);
-    case 3: TRYPALETTE(VIDEO_PALETTE_RGB24);
-    case 4: TRYPALETTE(VIDEO_PALETTE_RGB32);
-    }
-
-    // none of the formats are supported
-    perror("pdp_v4l: VIDIOCMCAPTURE: format not supported");
-    goto closit;
-
-
- capture_ok:
-
-    post("pdp_v4l: frame %d %d, format %d, width %d, height %d",
-        x->x_frame, x->x_vmmap[x->x_frame].frame, x->x_vmmap[x->x_frame].format,
-        x->x_vmmap[x->x_frame].width, x->x_vmmap[x->x_frame].height);
-
-    x->x_width = width;
-    x->x_height = height;
-
-    post("pdp_v4l: Opened video connection (%dx%d)",x->x_width,x->x_height);
-
-
-    /* do some pwc specific inits */
-    pdp_v4l_pwc_init(x);
-
-
-    x->x_initialized = true;
-
-    /* create thread */
-    x->x_continue_thread = 1;
-    x->x_frame_ready = 0;
-    pthread_create(&x->x_thread_id, 0, pdp_v4l_thread, x);
-
-    return;
- closit:
-    pdp_v4l_close_error(x);
-
+}
+static void pdp_v4l_input(t_pdp_v4l *x, t_float f) {
+    zl_v4l_input(&x->zl, f);
 }
 
-static void pdp_v4l_open_manual(t_pdp_v4l *x, t_symbol *name)
-{
-    x->x_open_retry = PDP_XV_RETRIES;
-    pdp_v4l_open(x, name);
+static void pdp_v4l_standard(t_pdp_v4l *x, t_float f) {
+    zl_v4l_standard(&x->zl, f);
 }
 
 
-static void pdp_v4l_channel(t_pdp_v4l *x, t_float f)
-{
-    int channel = (float)f;
-
-    if (x->x_initialized){
-	pdp_v4l_close(x);
-        x->x_channel = channel;
-	pdp_v4l_open(x, x->x_device);
-    }
-    else
-	x->x_channel = channel;
+static void pdp_v4l_freq(t_pdp_v4l *x, t_float f) {
+    zl_v4l_freq(&x->zl, f);
 }
 
-static void pdp_v4l_norm(t_pdp_v4l *x, t_symbol *s)
-{
-    unsigned int norm;
-
-    if (gensym("PAL") == s) norm = VIDEO_MODE_PAL;
-    else if (gensym("NTSC") == s) norm = VIDEO_MODE_NTSC;
-    else if (gensym("SECAM") == s) norm = VIDEO_MODE_SECAM;
-    else norm = VIDEO_MODE_AUTO;
-    
-
-
-    if (x->x_initialized){
-	pdp_v4l_close(x);
-        x->x_norm = norm;
-	pdp_v4l_open(x, x->x_device);
-    }
-    else
-	x->x_norm = norm;
-}
-
-static void pdp_v4l_freq(t_pdp_v4l *x, t_float f)
-{
-        int freq = (int)f;
-
-	x->x_freq = freq;
-	if (x->x_freq > 0){
-	    if (ioctl(x->x_tvfd, VIDIOCSFREQ, &x->x_freq) < 0)
-		perror ("couldn't set frequency :");
-	    //else {post("pdp_v4l: tuner frequency: %f MHz", f / 16.0f);}
-	}
-
-}
-
-static void pdp_v4l_freqMHz(t_pdp_v4l *x, t_float f)
-{
-    pdp_v4l_freq(x, f*16.0f);
+static void pdp_v4l_freqMHz(t_pdp_v4l *x, t_float f) {
+    zl_v4l_freq(&x->zl, f*16.0f);
 }
 
 
-static void pdp_v4l_bang(t_pdp_v4l *x)
-{
-   
-  /* if initialized, grab a frame and output it */
 
-    unsigned int w,h,nbpixels,packet_size,plane1,plane2;
-    unsigned char *newimage;
-    int object,length,pos,i,encoding;
-    t_pdp* header;
-    t_image* image;
-    short int * data;
+static void pdp_v4l_bang(t_pdp_v4l *x) {
 
+    /* Make some effort to have an open device. */
+    int tries = 3;
+    while (tries--) zl_v4l_open_if_necessary(&x->zl);
 
-    static short int gain[4] = {0x7fff, 0x7fff, 0x7fff, 0x7fff};
+    /* Get raw image data */
+    unsigned char *newimage = NULL;
+    zl_v4l_next(&x->zl, &newimage);
+    if (NULL == newimage) return;
 
-    if (!(x->x_initialized)){
-	post("pdp_v4l: no device opened");
+    unsigned int fourcc;
+    unsigned int w,h;
+    zl_v4l_get_format(&x->zl, &fourcc, &w, &h);
 
-	if (x->x_auto_open){
-	  post("pdp_v4l: attempting auto open");
-	  pdp_v4l_open(x, x->x_device);
-	  if (!(x->x_initialized)){
-	    post("pdp_v4l: auto open failed");
-	    return;
-	  }
-	}
-
-	else return;
-    }
-
-
-    /* do nothing if there is no frame ready */
-    if((!x->x_frame_ready) && (x->x_only_new_frames)) return;
-    x->x_frame_ready = 0;
-
-    /* get the address of the "other" frame */
-    newimage = x->x_videobuf + x->x_vmbuf.offsets[x->x_last_frame];
-
-    /* create new packet */
-    w = x->x_width;
-    h = x->x_height;
-
-    //nbpixels = w * h;
-
-/*
-    switch(x->x_pdp_image_type){
-    case PDP_IMAGE_GREY:   
-        packet_size = nbpixels << 1; 
-        break;
-    case PDP_IMAGE_YV12:   
-	packet_size = (nbpixels + (nbpixels >> 1)) << 1;
-	break;
-    default:
-	packet_size = 0;
-	post("pdp_v4l: internal error");
-    }
-*/
-
-    //packet_size = (nbpixels + (nbpixels >> 1)) << 1;
-
-
-    //plane1 = nbpixels;
-    //plane2 = nbpixels + (nbpixels>>2);
-
-    object = pdp_packet_new_image(PDP_IMAGE_YV12, w, h);
-    header = pdp_packet_header(object);
-    image = pdp_packet_image_info(object);
-
+    int pdp_packt = pdp_packet_new_image(PDP_IMAGE_YV12, w, h);
+    t_pdp* header = pdp_packet_header(pdp_packt);
     if (!header){
-	post("pdp_v4l: ERROR: can't allocate packet");
-	return;
+        post("pdp_v4l: ERROR: can't allocate packet");
+        return;
     }
 
-    data = (short int *) pdp_packet_data(object);
-    newimage = x->x_videobuf + x->x_vmbuf.offsets[x->x_frame ^ 0x1];
-
+    t_image *image = pdp_packet_image_info(pdp_packt);
+    short int *data = (short int *) pdp_packet_data(pdp_packt);
 
     /* convert data to pdp packet */
-
-    switch(x->x_v4l_palette){
-    case  VIDEO_PALETTE_YUV420P:
-	pdp_llconv(newimage, RIF_YUV__P411_U8, data, RIF_YVU__P411_S16, w, h); 
-	break;
-	
-	/* long live standards. v4l's rgb is in fact ogl's bgr */
-    case  VIDEO_PALETTE_RGB24:
-	pdp_llconv(newimage, RIF_BGR__P____U8, data, RIF_YVU__P411_S16, w, h); 
-	break;
-
-    case  VIDEO_PALETTE_RGB32:
-	pdp_llconv(newimage, RIF_BGRA_P____U8, data, RIF_YVU__P411_S16, w, h); 
-	break;
-
-    case  VIDEO_PALETTE_YUV422:
-	pdp_llconv(newimage, RIF_YUYV_P____U8, data, RIF_YVU__P411_S16, w, h); 
-	break;
-
-
+    switch(fourcc) {
+    case  V4L2_PIX_FMT_YUV420: pdp_llconv(newimage, RIF_YUV__P411_U8, data, RIF_YVU__P411_S16, w, h); break;
+    case  V4L2_PIX_FMT_RGB24:  pdp_llconv(newimage, RIF_BGR__P____U8, data, RIF_YVU__P411_S16, w, h); break;
+    case  V4L2_PIX_FMT_RGB32:  pdp_llconv(newimage, RIF_BGRA_P____U8, data, RIF_YVU__P411_S16, w, h); break;
+    case  V4L2_PIX_FMT_YUYV:   pdp_llconv(newimage, RIF_YUYV_P____U8, data, RIF_YVU__P411_S16, w, h); break;
+    case  V4L2_PIX_FMT_UYVY:   pdp_llconv(newimage, RIF_UYVY_P____U8, data, RIF_YVU__P411_S16, w, h); break;
+    case  v4l2_fourcc('S', '9', '2', '0'):
+        v4lconvert_sn9c20x_to_yuv420( newimage, (unsigned char*)data, w, h, 1);
+        pdp_llconv(data, RIF_YUV__P411_U8, newimage, RIF_YVU__P411_S16, w, h);
+        memcpy(data, newimage, w * h *2);
+        break;
+    case V4L2_PIX_FMT_PAC207:
+        /* GSPCA compressed ompressed RGGB bayer */
     default:
-	post("pdp_v4l: unsupported palette");
-	break;
+        /* For more inspiration see:
+           http://www.lavrsen.dk/svn/motion/trunk/video2.c
+           http://www.lavrsen.dk/svn/motion/trunk/video_common.c
+           http://www.siliconimaging.com/RGB%20Bayer.htm
+        */
+        post("pdp_v4l: unsupported color model: %08x", fourcc);
+        break;
     }
 
-/*
-    if (PDP_IMAGE_YV12 == x->x_pdp_image_type){
-	pixel_unpack_u8s16_y(&newimage[0], data, nbpixels>>3, x->x_state_data->gain);
-	pixel_unpack_u8s16_uv(&newimage[plane1], &data[plane2], nbpixels>>5, x->x_state_data->gain);
-	pixel_unpack_u8s16_uv(&newimage[plane2], &data[plane1], nbpixels>>5, x->x_state_data->gain);
-    }
-*/
-    //x->x_v4l_palette = VIDEO_PALETTE_YUV420P;
-    //x->x_v4l_palette = VIDEO_PALETTE_RGB24;
-
-/*
-
-    else if(PDP_IMAGE_GREY == x->x_pdp_image_type){
-	pixel_unpack_u8s16_y(&newimage[0], data, nbpixels>>3, x->x_state_data->gain);
-    }
-*/
-    //post("pdp_v4l: mark unused %d", object);
-
-    pdp_packet_pass_if_valid(x->x_outlet0, &object);
+    pdp_packet_pass_if_valid(x->x_outlet0, &pdp_packt);
 
 }
 
 
-static void pdp_v4l_setlegaldim(t_pdp_v4l *x, int xx, int yy)
-{
+static void pdp_v4l_dim(t_pdp_v4l *x, t_floatarg xx, t_floatarg yy) {
+
 
     unsigned int w,h;
 
     w  = pdp_imageproc_legalwidth((int)xx);
     h  = pdp_imageproc_legalheight((int)yy);
-    
+
+    post("dim %d x %d (%f x %f)\n", w,h,xx,yy);
+
+#if 0 // FIXME: not used
     w = (w < x->x_maxwidth) ? w : x->x_maxwidth;
     w = (w > x->x_minwidth) ? w : x->x_minwidth;
 
     h = (h < x->x_maxheight) ? h : x->x_maxheight;
     h = (h > x->x_minheight) ? h : x->x_minheight;
+#endif
 
-    x->x_width = w;
-    x->x_height = h;
+    zl_v4l_set_dim(&x->zl, w, h);
 }
 
-static void pdp_v4l_dim(t_pdp_v4l *x, t_floatarg xx, t_floatarg yy)
-{
-  if (x->x_initialized){
+
+static void pdp_v4l_free(t_pdp_v4l *x) {
     pdp_v4l_close(x);
-    pdp_v4l_setlegaldim(x, (int)xx, (int)yy);
-    pdp_v4l_open(x, x->x_device);
-    
-  }
-  else{
-    pdp_v4l_setlegaldim(x, (int)xx, (int)yy);
-  }
 }
 
-static void pdp_v4l_format(t_pdp_v4l *x, t_symbol *s)
-{
-    if      (s == gensym("YUV420P")) x->x_format = 1;
-    else if (s == gensym("YUV422"))  x->x_format = 2;
-    else if (s == gensym("RGB24"))   x->x_format = 3;
-    else if (s == gensym("RGB32"))   x->x_format = 4;
-    else if (s == gensym("auto"))    x->x_format = 0;
+static void pdp_v4l_norm(t_pdp_v4l *x, t_symbol *s) {
+#ifdef HAVE_V4L1
+    unsigned int norm;
+    if (gensym("PAL") == s) norm = VIDEO_MODE_PAL;
+    else if (gensym("NTSC") == s) norm = VIDEO_MODE_NTSC;
+    else if (gensym("SECAM") == s) norm = VIDEO_MODE_SECAM;
+    else norm = VIDEO_MODE_AUTO;
+    zl_v4l_set_norm(&x->zl, norm);
+#endif
+}
+
+
+static void pdp_v4l_format(t_pdp_v4l *x, t_symbol *s) {
+    unsigned int format = 0;
+    if      (s == gensym("YUV420P")) format = 1;
+    else if (s == gensym("YUV422"))  format = 2;
+    else if (s == gensym("RGB24"))   format = 3;
+    else if (s == gensym("RGB32"))   format = 4;
+    else if (s == gensym("auto"))    format = 0;
     else {
-	post("pdp_v4l: format %s unknown, using autodetect", s->s_name);
-	x->x_format = 0;
+        post("pdp_v4l: format %s unknown, using autodetect", s->s_name);
+        format = 0;
     }
+    zl_v4l_set_format(&x->zl, format);
+}
+static void pdp_v4l_channel(t_pdp_v4l *x, t_float channel) {
+    zl_v4l_set_channel(&x->zl, channel);
+}
 
-    if (x->x_initialized){
-	pdp_v4l_close(x);
-	pdp_v4l_open(x, x->x_device);
+static void pdp_v4l_info(t_pdp_v4l *x) {
+    const char *card = zl_v4l_card(&x->zl);
+    char c, nospace_card[strlen(card)+1];
+    int i = 0;
+    while (0 != (c = card[i])) {
+        nospace_card[i++] = isalnum(c) ? c : '_';
     }
+    nospace_card[i] = 0;
+    t_atom atom[2];
+    SETSYMBOL(atom+0, gensym("card"));
+    SETSYMBOL(atom+1, gensym(nospace_card));
+#if 0
+    // "list" may not be the proper way to do this...
+    outlet_anything(x->x_outlet1, gensym("list"), 2, atom);
+#else
+    outlet_anything(x->x_outlet1, atom[0].a_w.w_symbol, 1, atom+1);
+#endif
 }
 
 
-static void pdp_v4l_free(t_pdp_v4l *x)
-{
-    pdp_v4l_close(x);
+
+static void pdp_v4l_pwc_agc(t_pdp_v4l *x, t_float gain) {
+    return zl_v4l_pwc_agc(&x->zl, gain);
 }
+
+static void pdp_v4l_fps(t_pdp_v4l *x, t_floatarg num, t_floatarg den) {
+    int iden = den;
+    if (iden == 0) iden = 1;
+    return zl_v4l_set_fps(&x->zl, num, iden);
+}
+
+
 
 t_class *pdp_v4l_class;
 
@@ -774,83 +377,43 @@ void *pdp_v4l_new(t_symbol *vdef, t_symbol *format)
     t_pdp_v4l *x = (t_pdp_v4l *)pd_new(pdp_v4l_class);
 
     x->x_outlet0 = outlet_new(&x->x_obj, &s_anything);
+    x->x_outlet1 = outlet_new(&x->x_obj, &s_anything);
 
-    x->x_initialized = false;
-
-
-    x->x_tvfd = -1;
-    x->x_frame = 0;
-    x->x_last_frame = 0;
-
-    x->x_framerate = 27;
-
-    x->x_auto_open = true;
-    if (vdef != gensym("")){
-	x->x_device = vdef;
-    }
-    else{
-	x->x_device = gensym("/dev/video0");
-    }
+    zl_v4l_init(&x->zl, true);
 
     if (format != gensym("")){
-	pdp_v4l_format(x, format);
+        pdp_v4l_format(x, format);
     }
-    else {
-	x->x_format = 0; // default is autodetect
-    }
-
-    x->x_continue_thread = 0;
-    x->x_only_new_frames = 1;
-
-    x->x_width = 320;
-    x->x_height = 240;
-
-//    pdp_v4l_type(x, gensym("yv12"));
-
-
-    x->x_open_retry = PDP_XV_RETRIES;
-
-    x->x_channel = 0;
-    x->x_norm = 0; // PAL
-    x->x_freq = -1; //don't set freq by default
-
-    x->x_minwidth = pdp_imageproc_legalwidth(0);
-    x->x_maxwidth = pdp_imageproc_legalwidth_round_down(0x7fffffff);
-    x->x_minheight = pdp_imageproc_legalheight(0);
-    x->x_maxheight = pdp_imageproc_legalheight_round_down(0x7fffffff);
-
 
     return (void *)x;
 }
-
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-
-void pdp_v4l_setup(void)
-{
-
+void pdp_v4l_setup(void) {
 
     pdp_v4l_class = class_new(gensym("pdp_v4l"), (t_newmethod)pdp_v4l_new,
-    	(t_method)pdp_v4l_free, sizeof(t_pdp_v4l), 0, A_DEFSYMBOL, A_DEFSYMBOL, A_NULL);
-
+            (t_method)pdp_v4l_free, sizeof(t_pdp_v4l), 0, A_DEFSYMBOL, A_DEFSYMBOL, A_NULL);
 
     class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_bang, gensym("bang"), A_NULL);
-    class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_audio, gensym("audio"), A_NULL);
-    class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_close_manual, gensym("close"), A_NULL);
-    class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_open_manual, gensym("open"), A_SYMBOL, A_NULL);
+    // class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_audio, gensym("audio"), A_NULL);
+    class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_close, gensym("close"), A_NULL);
+    class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_open, gensym("open"), A_SYMBOL, A_NULL);
     class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_channel, gensym("channel"), A_FLOAT, A_NULL);
     class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_norm, gensym("norm"), A_SYMBOL, A_NULL);
+    class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_standard, gensym("standard"), A_FLOAT, A_NULL);
+    class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_input, gensym("input"), A_FLOAT, A_NULL);
     class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_dim, gensym("dim"), A_FLOAT, A_FLOAT, A_NULL);
     class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_freq, gensym("freq"), A_FLOAT, A_NULL);
     class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_freqMHz, gensym("freqMHz"), A_FLOAT, A_NULL);
     class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_pwc_agc, gensym("gain"), A_FLOAT, A_NULL);
+    class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_fps, gensym("fps"), A_FLOAT, A_DEFFLOAT, A_NULL);
     class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_format, gensym("captureformat"), A_SYMBOL, A_NULL);
-
-    
+    class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_control, gensym("control"), A_SYMBOL, A_FLOAT, A_DEFFLOAT, A_NULL);
+    class_addmethod(pdp_v4l_class, (t_method)pdp_v4l_info, gensym("info"), A_NULL);
 
 }
 
