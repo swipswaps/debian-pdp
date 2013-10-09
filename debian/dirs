@@ -1,7 +1,6 @@
 usr/bin
 usr/include/pdp
-usr/lib/pd/doc/pdp
-usr/lib/pd/doc/pdp/introduction
-usr/lib/pd/doc/pdp/examples
-usr/lib/pd/extra
-usr/lib/pd/doc/5.reference
+usr/share/pd-pdp
+usr/share/pd-pdp/introduction
+usr/share/pd-pdp/examples
+usr/lib/pd/extra/pdp
