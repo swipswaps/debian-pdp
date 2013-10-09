@@ -1,25 +1,52 @@
-This package was debianized by Pablo Martin <caedes@sindominio.net> on
-Thu,  10 Jul 2003 03:30:26 +0100.
-
-It was downloaded from <ftp://epy.co.at/pub/pd>
-
-Upstream Authors: Tom Schouten <pdp@zzz.kotnet.org> and others
-
-Copyright:
-	Copyright (C) 2002-2004 Tom Schouten <pdp@zzz.kotnet.org>
-
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: pdp
+Upstream-Contact: Tom Schouten <tom@zwizwa.be>
+Source: http://zwizwa.be/pdp/
 License: GPL-2+
 
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
+Files: *
+Copyright: 2002-2013, Tom Schouten <tom@zwizwa.be>
+License: GPL-2+
 
+Files: modules/image_special/pdp_cog.c
+Copyright: 2003, Johannes Taelman <johannes.taelman@rug.ac.be>
+License: GPL-2+
 
-This software is published under GPL terms, found on Debian systems in the file
-/usr/share/common-licenses/GPL-2.
+Files: modules/image_io/pdp_qt.c
+Copyright: 2002-2013, Tom Schouten <tom@zwizwa.be>
+  2002, Yves Degoyon
+License: GPL-2+
+
+Files: modules/image_io/pdp_sdl.c
+Copyright: 2003-2013, Tom Schouten <tom@zwizwa.be>
+  2003, Martin Pichlmair
+License: GPL-2+
+
+Files: system/zl/pwc-ioctl.h
+Copyright: 2001-2002, Nemosoft Unv. <webcam@smcc.demon.nl>
+License: GPL-2+
+
+Files: debian/*
+Copyright:
+  2003, Pablo Martin <caedes@sindominio.net>
+  2004-2005, Guenter Geiger <geiger@debian.org>
+  2009, Paul Brossier <piem@debian.org>
+  2012-2013, IOhannes m zmölnig <zmoelnig@iem.at>
+License: GPL-2+
+
+License: GPL-2+
+ This program is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation; either version 2, or (at your option) any later version.
+ .
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ .
+ Comment:
+ .
+ On Debian systems the 'GNU General Public License' version 2 is located
+ in '/usr/share/common-licenses/GPL-2'.
+ .
+ You should have received a copy of the GNU General Public License along with
+ this program.  If not, see <http://www.gnu.org/licenses/>.
