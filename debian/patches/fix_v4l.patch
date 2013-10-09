@@ -1,6 +1,7 @@
 Author: IOhannes m zmölnig
 Description: original configure detects libv4l by checking ordinary V4L headers
  and V4L by checking libv4l headers; it should be the other way round.
+Forwarded: http://lists.puredata.info/pipermail/pd-list/2013-10/104522.html
 --- pdp.orig/configure.ac
 +++ pdp/configure.ac
 @@ -179,8 +179,8 @@
