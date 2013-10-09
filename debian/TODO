@@ -1,0 +1,2 @@
+[pdp_glx] quits Pd when th window is closed
+"pdp_opengl" (aka: 3dp) does not load: "undefined symbol: pdp_xwindow_create_on_display"
