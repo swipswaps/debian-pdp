@@ -1,7 +1,3 @@
 usr/share/pd-pdp/reference.txt	usr/lib/pd/extra/pdp/reference.txt
-usr/share/pd-pdp/introduction	usr/lib/pd/extra/pdp/introduction
-usr/share/pd-pdp/examples	usr/lib/pd/extra/pdp/examples
-usr/share/pd-pdp/introduction	usr/share/doc/pd-pdp/introduction
-usr/share/pd-pdp/examples	usr/share/doc/pd-pdp/examples
-usr/lib/pd/extra/pdp		usr/lib/pd/extra/3dp
-usr/share/pd-pdp/3dp/examples	usr/lib/pd/extra/pdp/3dp-examples
+usr/lib/pd/extra/pdp/introduction	usr/share/doc/pd-pdp/introduction
+usr/lib/pd/extra/pdp/examples	usr/share/doc/pd-pdp/examples

@@ -1,6 +1,4 @@
 opengl/*.pd_linux	usr/lib/pd/extra/pdp
 opengl/abstractions/*	usr/lib/pd/extra/pdp
 opengl/doc/objects/*.pd usr/lib/pd/extra/pdp
-opengl/doc/examples/*.pd usr/share/pd-pdp/3dp/examples/
-doc/introduction	usr/share/pd-pdp/
-doc/examples		usr/share/pd-pdp/
+opengl/doc/examples/*.pd usr/lib/pd/extra/pdp/3dp

@@ -1,5 +1,5 @@
 01_destdir.patch
-02_installdocs.patch
+02_install_extra-pdp.patch
 05_kfreebsd.patch
 fix_typos.patch
 hardening.patch

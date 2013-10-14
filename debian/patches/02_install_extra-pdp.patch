@@ -1,19 +1,17 @@
-Description: install documentation into /usr/share/pd-pdp
- and library-files into /usr/lib/pd/extra/pdp
+Description: install library-files into /usr/lib/pd/extra/pdp
 Author: IOhannes m zmölnig
 Last-Update: 2013-10-09
 ---
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- pdp.orig/Makefile
 +++ pdp/Makefile
-@@ -67,18 +67,18 @@
+@@ -67,18 +67,17 @@
  install: all
  	#check if pd is installed. if this fails make install will stop here.
  	test -d $(DESTDIR)$(prefix)/lib/pd
 -	install -d $(DESTDIR)$(prefix)/lib/pd/extra
 -	install -m 755 $(PDP_LIBRARY_NAME) $(DESTDIR)$(prefix)/lib/pd/extra
 +	install -d $(DESTDIR)$(prefix)/lib/pd/extra/pdp
-+	install -d $(DESTDIR)$(prefix)/share/pd-pdp
 +	install -m 755 $(PDP_LIBRARY_NAME) $(DESTDIR)$(prefix)/lib/pd/extra/pdp
  	install -m 755 -d $(DESTDIR)$(prefix)/include/pdp
  	install -m 644 include/*.h $(DESTDIR)$(prefix)/include/pdp
@@ -27,11 +25,11 @@ This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 -	install -m 644 doc/examples/*.pd $(DESTDIR)$(prefix)/lib/pd/doc/pdp/examples
 +	install -m 644 abstractions/*.pd $(DESTDIR)$(prefix)/lib/pd/extra/pdp
 +	install -m 644 doc/objects/*.pd $(DESTDIR)$(prefix)/lib/pd/extra/pdp
-+	install -m 755 -d $(DESTDIR)$(prefix)/share/pd-pdp/introduction
-+	install -m 755 -d $(DESTDIR)$(prefix)/share/pd-pdp/examples
-+	install -m 644 doc/reference.txt $(DESTDIR)$(prefix)/share/pd-pdp
-+	install -m 644 doc/introduction/*.pd $(DESTDIR)$(prefix)/share/pd-pdp/introduction
-+	install -m 644 doc/examples/*.pd $(DESTDIR)$(prefix)/share/pd-pdp/examples
++	install -m 755 -d $(DESTDIR)$(prefix)/lib/pd/extra/pdp/introduction
++	install -m 755 -d $(DESTDIR)$(prefix)/lib/pd/extra/pdp/examples
++	install -m 644 doc/reference.txt $(DESTDIR)$(prefix)/lib/pd/extra/pdp
++	install -m 644 doc/introduction/*.pd $(DESTDIR)$(prefix)/lib/pd/extra/pdp/introduction
++	install -m 644 doc/examples/*.pd $(DESTDIR)$(prefix)/lib/pd/extra/pdp/examples
  	install -m 755 bin/pdp-config $(DESTDIR)$(prefix)/bin
  
  snapshot:
