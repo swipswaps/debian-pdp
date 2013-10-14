@@ -1,2 +1,3 @@
 [pdp_glx] quits Pd when th window is closed
+	does *not* quit on intel hd4000, so it may be another problem
 "pdp_opengl" (aka: 3dp) does not load: "undefined symbol: pdp_xwindow_create_on_display"
