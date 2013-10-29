@@ -1,4 +1,4 @@
-pdp (1:0.14.0-1) UNRELEASED; urgency=low
+pdp (1:0.14.0-1) unstable; urgency=low
 
    runtime components installed into /usr/lib/pd/extra/pdp/:
    in order to prevent namespace pollution, all runtime components of pdp

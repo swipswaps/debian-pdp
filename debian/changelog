@@ -1,4 +1,4 @@
-pdp (1:0.14.0-1) UNRELEASED; urgency=low
+pdp (1:0.14.0-1) unstable; urgency=low
 
   New upstream release (Closes: #398013, LP: #136216)
 
@@ -24,7 +24,7 @@ pdp (1:0.14.0-1) UNRELEASED; urgency=low
   * Converted debian/copyright to DEP-5
   * Bumped standards to 3.9.4
 
- -- IOhannes m zmölnig <zmoelnig@iem.at>  Tue, 29 Oct 2013 22:26:34 +0100
+ -- IOhannes m zmölnig <zmoelnig@iem.at>  Tue, 29 Oct 2013 22:54:09 +0100
 
 pdp (1:0.12.5-2) unstable; urgency=low
 
