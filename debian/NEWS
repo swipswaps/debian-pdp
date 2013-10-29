@@ -1,0 +1,12 @@
+pdp (1:0.14.0-1) UNRELEASED; urgency=low
+
+   runtime components installed into /usr/lib/pd/extra/pdp/:
+   in order to prevent namespace pollution, all runtime components of pdp
+   (binaries, abstractions, documentation) are now installed into
+     /usr/lib/pd/extra/pdp.
+   you will have to add '/usr/lib/pd/extra/pdp/' to Pd's search-path, to make
+   pdp-abstraction work correctly.
+   pdp will perform a check at startup, to ensure that you have set the
+   search-path correctly.
+
+ -- IOhannes m zmölnig <zmoelnig@iem.at>  Tue, 29 Oct 2013 22:22:00 +0100
