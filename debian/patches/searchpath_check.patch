@@ -1,0 +1,80 @@
+Description: check whether searchpaths are setup-correctly
+ pd-libraries should live in a subdirectory of .../pd/extra
+ (e.g. .../pd/extra/pdp/), but pdp usually is installed directly
+ into .../pd/extra/; since it comes with some abstractions, the user
+ might want to add .../pd/extra/pdp to Pd's search path.
+ this patch checks whether pdp-abstractions are findable, and if not prints a
+ warning and instructions which path to add.
+Author: IOhannes m zmölnig
+Last-Update: 2013-10-29
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- pdp.orig/system/pdp.c
++++ pdp/system/pdp.c
+@@ -22,6 +22,9 @@
+ #include "pdp_config.h"
+ #include "pdp_post.h"
+ 
++#include "m_imp.h"
++#include <fcntl.h>
++
+ static int initialized = 0;
+ 
+ /* all symbols are C style */
+@@ -101,8 +104,46 @@
+ /* testing */
+ void pdp_dpd_test_setup(void);
+ 
+-
+-
++static t_class *pdp_class;
++static void*pdp_class_new(void)
++{
++  t_pd*x=pd_new(pdp_class);
++  return (x);
++}
++/* check whether we can find the pdp-abstractions
++ * (because they are already in Pd's path)
++ */
++void pdp_class_setup(void) {
++  const char*absname="pdp_tag.pd";
++  char buf[MAXPDSTRING];
++  char*bufptr=NULL;
++  const char*libpath=NULL;
++
++  int fd=-1;
++
++  /* create a [pdp] objectclass */
++  pdp_class = class_new(gensym("pdp"), pdp_class_new, 0, sizeof(t_object), CLASS_NOINLET, 0);
++
++  /* check whether we can find a pdp-abstraction */
++  if ((fd=canvas_open(NULL, absname, "", buf, &bufptr, MAXPDSTRING, 1))>=0){
++    sys_close(fd);
++    return;
++  }
++
++  /* couldn't find pdp-abstraction, print-warning */
++  logpost(NULL, 1, "PDP: cannot find pdp-abstractions");
++  libpath=pdp_class->c_externdir->s_name;
++  /* check whether we can find the abstractions in Gem's own path */
++  snprintf(buf, MAXPDSTRING-1, "%s/%s", libpath, absname);
++  buf[MAXPDSTRING-1]=0;
++  if ((fd=sys_open(buf, O_RDONLY))>=0){
++    sys_close(fd);
++    logpost(NULL, 2, "PDP: please add '%s' to your search-path", libpath);
++  } else {
++    // can't find this abstraction...giving up
++    logpost(NULL, 2, "PDP: please add path to '%s' to your search-path!", absname);
++  }
++}
+ 
+ /* library setup routine */
+ void pdp_setup(void){
+@@ -122,6 +163,7 @@
+ 
+ 
+     /* setup pdp system */
++    pdp_class_setup();
+ 
+     /* kernel */
+     pdp_pdsym_setup();
