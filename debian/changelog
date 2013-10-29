@@ -1,3 +1,31 @@
+pdp (1:0.14.0-1) UNRELEASED; urgency=low
+
+  New upstream release (Closes: #398013, LP: #136216)
+
+  [ IOhannes m zmölnig ]
+  * Imported Upstream version 0.14.0
+  * Updated debian/patches/
+   * Removed patches applied upstream
+   * Refreshed other patches
+   * Fixed hardening for pdp_opengl
+  * Native V4L2-support on linux-architectures
+    * Build-depend on libv4l-dev
+  * Enable MMX on amd64
+  * Proper libdir installation
+    * install everything to /usr/lib/pd/extra/pdp/
+    * on startup check, whether libdir-path is searched
+  * Use dh-autoreconf
+  * Added Vcs-* stanzas
+  * Install CHANGES.LOG as upstream Changelog
+  * Added debian/NEWS
+  * Run strip/shlipdeps on .pd_linux files
+  * Fix permissions of .pd_linux files (Closes: #716133, #716276)
+  * Updated my Uploader's name
+  * Converted debian/copyright to DEP-5
+  * Bumped standards to 3.9.4
+
+ -- IOhannes m zmölnig <zmoelnig@iem.at>  Tue, 29 Oct 2013 22:26:34 +0100
+
 pdp (1:0.12.5-2) unstable; urgency=low
 
   * Switch to 3.0 (quilt) format
