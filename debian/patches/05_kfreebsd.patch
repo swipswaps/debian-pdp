@@ -1,7 +1,9 @@
 Author: Debian
 Description: treat kFreeBSD the same as linux
---- pdp.orig/configure
-+++ pdp/configure
+Index: pdp/configure
+===================================================================
+--- pdp.orig/configure	2013-11-02 05:12:21.000000000 +0100
++++ pdp/configure	2013-11-02 05:13:08.000000000 +0100
 @@ -3494,7 +3494,7 @@
  
  
@@ -11,8 +13,28 @@ Description: treat kFreeBSD the same as linux
  then
  	PDP_LIBRARY_NAME=pdp.pd_linux
  
---- pdp.orig/configure.ac
-+++ pdp/configure.ac
+@@ -3540,7 +3540,7 @@
+   cat >>confdefs.h <<_ACEOF
+ #define HAVE_LIBV4L1_VIDEODEV_H 1
+ _ACEOF
+- have_v4l="yes"
++ have_libv4l="yes"
+ fi
+ 
+ done
+@@ -3552,7 +3552,7 @@
+   cat >>confdefs.h <<_ACEOF
+ #define HAVE_LINUX_VIDEODEV_H 1
+ _ACEOF
+- have_libv4l="yes"
++ have_v4l="yes"
+ fi
+ 
+ done
+Index: pdp/configure.ac
+===================================================================
+--- pdp.orig/configure.ac	2013-11-02 05:11:46.000000000 +0100
++++ pdp/configure.ac	2013-11-02 05:15:33.000000000 +0100
 @@ -137,7 +137,7 @@
  AC_CHECK_LIB(m,sin)
  
@@ -22,3 +44,17 @@ Description: treat kFreeBSD the same as linux
  then
  	PDP_LIBRARY_NAME=pdp.pd_linux
  
+Index: pdp/system/zl/v4l.c
+===================================================================
+--- pdp.orig/system/zl/v4l.c	2013-11-02 05:11:31.000000000 +0100
++++ pdp/system/zl/v4l.c	2013-11-02 05:16:05.000000000 +0100
+@@ -43,7 +43,9 @@
+ #include <sys/ioctl.h>
+ #include <sys/types.h>
+ #include <sys/time.h>
++#ifdef __linux__
+ #include <linux/types.h>
++#endif
+ #include <stdbool.h>
+ 
+ #include "v4l.h"
