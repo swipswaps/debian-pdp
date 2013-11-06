@@ -1,6 +1,6 @@
 pdp (1:0.14.0-1) unstable; urgency=low
 
-   runtime components installed into /usr/lib/pd/extra/pdp/:
+  runtime components installed into /usr/lib/pd/extra/pdp/
    in order to prevent namespace pollution, all runtime components of pdp
    (binaries, abstractions, documentation) are now installed into
      /usr/lib/pd/extra/pdp.
@@ -8,5 +8,10 @@ pdp (1:0.14.0-1) unstable; urgency=low
    pdp-abstraction work correctly.
    pdp will perform a check at startup, to ensure that you have set the
    search-path correctly.
+
+  removed pdp_opengl (aka 3dp)
+   3dp support has been temporarily dropped from upstream pdp(0.14.0),
+   but it is expected to be ported "soon".
+   http://lists.puredata.info/pipermail/pd-list/2013-10/104640.html
 
  -- IOhannes m zmölnig <zmoelnig@iem.at>  Tue, 29 Oct 2013 22:22:00 +0100

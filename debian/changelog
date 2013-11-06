@@ -8,12 +8,16 @@ pdp (1:0.14.0-1) UNRELEASED; urgency=low
    * Removed patches applied upstream
    * Refreshed other patches
    * Fixed hardening for pdp_opengl
+  * Removed pdp_opengl/3dp
+   * not ported upstream
   * Native V4L2-support on linux-architectures
     * Build-depend on libv4l-dev
+  * GNU/kFreeBSD fixes (Closes: #627904)
+    * Don't include <linux/types.h> on non-linux platforms
   * Enable MMX on amd64
   * Proper libdir installation
-    * install everything to /usr/lib/pd/extra/pdp/
-    * on startup check, whether libdir-path is searched
+    * Install everything to /usr/lib/pd/extra/pdp/
+    * Check on startup, whether libdir-path is searched
   * Use dh-autoreconf
   * Added Vcs-* stanzas
   * Install CHANGES.LOG as upstream Changelog
