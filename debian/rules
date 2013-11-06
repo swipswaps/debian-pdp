@@ -22,16 +22,16 @@ override_dh_auto_configure:
 override_dh_auto_build:
 	dh build --before dh_auto_build
 	make pdp_all
-	make -C opengl \
-		LDFLAGS="$(LDFLAGS)" \
-		ADDITIONAL_CFLAGS="$(CFLAGS)" \
-		ADDITIONAL_CPPFLAGS="$(CPPFLAGS)"
+#	make -C opengl \
+#		LDFLAGS="$(LDFLAGS)" \
+#		ADDITIONAL_CFLAGS="$(CFLAGS)" \
+#		ADDITIONAL_CPPFLAGS="$(CPPFLAGS)"
 	docbook-to-man debian/pdp-config.sgml > pdp-config.1
 	dh build --after dh_auto_build
 
 override_dh_auto_clean:
 	dh clean --before dh_auto_clean
-	[ ! -f opengl/Makefile.config ] || make -C opengl clean
+#	[ ! -f opengl/Makefile.config ] || make -C opengl clean
 	[ ! -f Makefile.config ] || make clean
 	-$(RM) -rf bin/pdp-config include/pdp_config.h
 	-$(RM) -f Makefile.config config.log config.status

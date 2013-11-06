@@ -1,4 +1,0 @@
-opengl/*.pd_linux	usr/lib/pd/extra/pdp
-opengl/abstractions/*	usr/lib/pd/extra/pdp
-opengl/doc/objects/*.pd usr/lib/pd/extra/pdp
-opengl/doc/examples/*.pd usr/lib/pd/extra/pdp/3dp
