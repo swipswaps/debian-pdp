@@ -1,0 +1,37 @@
+Description: make [pdp_help_input] work out of the box
+ Since pdp doesn't ship any .mov-file, it's pointless to use a movie
+ as input; therefore use [pdp_noise] as default input, which is always
+ available.
+ Also removed dependency on "ggee" (only needed for mov-playback)
+Author: IOhannes m zmölnig
+Origin: Debian
+Last-Update: 2013-11-12
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- pdp.orig/doc/objects/pdp_help_input.pd
++++ pdp/doc/objects/pdp_help_input.pd
+@@ -1,4 +1,4 @@
+-#N canvas 683 29 681 161 10;
++#N canvas 679 51 681 161 10;
+ #X obj 23 524 pdp_v4l;
+ #X text 17 11 this abstraction is used as an input module in most of
+ the documentation patches. change it to reflect your preferred input
+@@ -48,7 +48,7 @@
+ #X text 236 552 connect here;
+ #X text 239 566 for noise input;
+ #X text 293 137 disconnect for noise input;
+-#X obj 492 255 ggee/getdir;
++#X obj 492 255 symbol .;
+ #X msg 492 288 open \$1/../../doc/media/midr-mjpeg.mov;
+ #X obj 492 515 pdp_qt;
+ #X connect 0 0 4 0;
+@@ -62,8 +62,7 @@
+ #X connect 10 0 39 0;
+ #X connect 13 0 0 0;
+ #X connect 14 0 41 0;
+-#X connect 17 0 10 0;
+-#X connect 18 0 13 0;
++#X connect 18 0 35 0;
+ #X connect 21 0 41 0;
+ #X connect 22 0 5 0;
+ #X connect 30 0 22 0;

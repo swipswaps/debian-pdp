@@ -5,3 +5,4 @@ fix_typos.patch
 hardening.patch
 fix_v4l.patch
 searchpath_check.patch
+help_input.patch
